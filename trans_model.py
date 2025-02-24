@@ -425,7 +425,7 @@ def compute_losses(model, test_loader):
 if __name__ == '__main__':
     # Initialize wandb
     wandb.init(
-        project="transformer_vae_large",
+        project="transformer_vae_testing",
         config={
             "learning_rate": 1e-5,
             "architecture": "TransformerVAE",
@@ -450,7 +450,7 @@ if __name__ == '__main__':
     print('Loading light curves...')
     fits_files = load_all_fits_files()
     print('finished getting all files')
-    lc_low, lc_med, lc_high = load_n_light_curves(80000, fits_files, band="all")
+    lc_low, lc_med, lc_high = load_n_light_curves(10, fits_files, band="all")
     light_curves_sample = list(zip(lc_low, lc_med, lc_high))
     print(f'Loaded {len(light_curves_sample)} light curves')
 
@@ -471,11 +471,11 @@ if __name__ == '__main__':
         latent_size=40,
         hidden_size=256,
         num_decoder_blocks=3,
-        dropout=0.05
+        dropout=0.1
     ).to(device)
 
     # Training parameters
-    num_epochs = 3500
+    num_epochs = 20000
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
 
