@@ -1,0 +1,16 @@
+{"time":"2025-02-18T23:18:21.807309669-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250218_231821-r4ivb4sv/logs/debug-core.log"}
+{"time":"2025-02-18T23:18:21.911553409-05:00","level":"INFO","msg":"created new stream","id":"r4ivb4sv"}
+{"time":"2025-02-18T23:18:21.911576849-05:00","level":"INFO","msg":"stream: started","id":"r4ivb4sv"}
+{"time":"2025-02-18T23:18:21.911586739-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"r4ivb4sv"}
+{"time":"2025-02-18T23:18:21.911596409-05:00","level":"INFO","msg":"sender: started","stream_id":"r4ivb4sv"}
+{"time":"2025-02-18T23:18:21.911740039-05:00","level":"INFO","msg":"handler: started","stream_id":"r4ivb4sv"}
+{"time":"2025-02-18T23:18:22.044408958-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T23:19:44.752750881-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-18T23:19:44.753251352-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-18T23:19:45.141297026-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-18T23:19:45.293076854-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-02-18T23:19:46.297600891-05:00","level":"INFO","msg":"stream: closing","id":"r4ivb4sv"}
+{"time":"2025-02-18T23:19:46.297614971-05:00","level":"INFO","msg":"handler: closed","stream_id":"r4ivb4sv"}
+{"time":"2025-02-18T23:19:46.297626571-05:00","level":"INFO","msg":"sender: closed","stream_id":"r4ivb4sv"}
+{"time":"2025-02-18T23:19:46.297622061-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"r4ivb4sv"}
+{"time":"2025-02-18T23:19:46.298436141-05:00","level":"INFO","msg":"stream: closed","id":"r4ivb4sv"}

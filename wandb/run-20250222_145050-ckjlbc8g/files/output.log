@@ -1,0 +1,8 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+Computing final losses and generating plots...
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(

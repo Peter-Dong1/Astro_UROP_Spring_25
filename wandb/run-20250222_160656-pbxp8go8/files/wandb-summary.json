@@ -1,0 +1,1 @@
+{"_step":29,"epoch":701,"train_loss":NaN,"val_loss":NaN,"_timestamp":1.74025842425724e+09,"_runtime":7.034118594,"Reconstruction":{"height":500,"_type":"image-file","sha256":"e17618b3cfcb3b6e098f46605eabfae7c7c29021e0b67da989983075a122e393","size":33043,"path":"media/images/Reconstruction_29_e17618b3cfcb3b6e098f.png","format":"png","width":800},"_wandb":{"runtime":7}}

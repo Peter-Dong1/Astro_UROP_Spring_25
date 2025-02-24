@@ -1,0 +1,15 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+3
+Beginning training...
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelerror.py", line 352, in <module>
+    wandb.log({"acc": acc, "loss": loss})
+                      ^^^
+NameError: name 'acc' is not defined

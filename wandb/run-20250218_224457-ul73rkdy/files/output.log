@@ -1,0 +1,69 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+10
+Beginning training...
+Epoch 1 | Train Loss: 11.83 | Valid Loss: 11.97
+Epoch 1001 | Train Loss: 0.07 | Valid Loss: 0.07
+Epoch 2001 | Train Loss: 0.07 | Valid Loss: 0.07
+Epoch 3001 | Train Loss: 0.06 | Valid Loss: 0.07
+Epoch 4001 | Train Loss: 0.06 | Valid Loss: 0.06
+Epoch 5001 | Train Loss: 0.06 | Valid Loss: 0.06
+Epoch 6001 | Train Loss: 0.05 | Valid Loss: 0.06
+Epoch 7001 | Train Loss: 0.06 | Valid Loss: 0.06
+Epoch 8001 | Train Loss: 0.05 | Valid Loss: 0.05
+Epoch 9001 | Train Loss: 0.04 | Valid Loss: 0.04
+Epoch 10001 | Train Loss: 0.06 | Valid Loss: 0.03
+Epoch 11001 | Train Loss: 0.04 | Valid Loss: 0.03
+Epoch 12001 | Train Loss: 0.04 | Valid Loss: 0.03
+Epoch 13001 | Train Loss: 0.03 | Valid Loss: 0.03
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 401, in <module>
+    wandb.log({"Reconstruction": wandb.Image(fig)})
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 441, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 393, in wrapper_fn
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 383, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 1871, in log
+    self._log(data=data, step=step, commit=commit)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 1585, in _log
+    self._partial_history_callback(data, step, commit)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 1415, in _partial_history_callback
+    self._backend.interface.publish_partial_history(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/interface/interface.py", line 674, in publish_partial_history
+    data = history_dict_to_json(run, data, step=user_step, ignore_copy_err=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/utils.py", line 54, in history_dict_to_json
+    payload[key] = val_to_json(
+                   ^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/utils.py", line 162, in val_to_json
+    val.bind_to_run(run, key, namespace)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 405, in bind_to_run
+    super().bind_to_run(run, key, step, id_, ignore_copy_err=ignore_copy_err)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/base_types/media.py", line 188, in bind_to_run
+    new_path = os.path.join(self._run.dir, media_path)
+                            ^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 383, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 815, in dir
+    return self._settings.files_dir
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_settings.py", line 1118, in files_dir
+    return self.x_files_dir or _path_convert(
+                               ^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/wandb_settings.py", line 48, in _path_convert
+    return os.path.expanduser(os.path.join(*args))
+                              ^^^^^^^^^^^^^^^^^^^
+  File "<frozen posixpath>", line 85, in join
+KeyboardInterrupt

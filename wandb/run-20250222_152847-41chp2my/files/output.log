@@ -1,0 +1,142 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 23605.7746, Validation Loss: 2644.6372
+Epoch 100, Train Loss: 2351.1180, Validation Loss: 339.9239
+Epoch 200, Train Loss: 1209.2493, Validation Loss: 170.0578
+Epoch 300, Train Loss: 657.2705, Validation Loss: 111.0327
+Epoch 400, Train Loss: 466.0973, Validation Loss: 82.9667
+Epoch 500, Train Loss: 321.9383, Validation Loss: 64.7369
+Epoch 600, Train Loss: 358.2523, Validation Loss: 64.4321
+Epoch 700, Train Loss: 297.1982, Validation Loss: 64.3820
+Epoch 800, Train Loss: 330.0448, Validation Loss: 64.3346
+Epoch 900, Train Loss: 347.1516, Validation Loss: 64.2940
+Epoch 1000, Train Loss: 354.5602, Validation Loss: 64.2617
+Epoch 1100, Train Loss: 368.9987, Validation Loss: 64.2284
+Epoch 1200, Train Loss: 331.6726, Validation Loss: 64.1602
+Epoch 1300, Train Loss: 322.8014, Validation Loss: 64.1267
+Epoch 1400, Train Loss: 348.7222, Validation Loss: 64.0783
+Epoch 1500, Train Loss: 375.8493, Validation Loss: 63.9957
+Epoch 1600, Train Loss: 319.4690, Validation Loss: 63.8992
+Epoch 1700, Train Loss: 329.4300, Validation Loss: 63.8286
+Epoch 1800, Train Loss: 341.0529, Validation Loss: 63.7538
+Epoch 1900, Train Loss: 357.2752, Validation Loss: 63.7020
+Epoch 2000, Train Loss: 361.0773, Validation Loss: 63.6120
+Epoch 2100, Train Loss: 345.9278, Validation Loss: 63.5338
+Epoch 2200, Train Loss: 358.7584, Validation Loss: 63.4334
+Epoch 2300, Train Loss: 352.2485, Validation Loss: 63.3882
+Epoch 2400, Train Loss: 352.5621, Validation Loss: 63.2842
+Epoch 2500, Train Loss: 320.9771, Validation Loss: 63.1855
+Epoch 2600, Train Loss: 378.9335, Validation Loss: 63.0732
+Epoch 2700, Train Loss: 356.9517, Validation Loss: 62.9733
+Epoch 2800, Train Loss: 355.7621, Validation Loss: 62.9158
+Epoch 2900, Train Loss: 370.4725, Validation Loss: 62.8258
+Epoch 3000, Train Loss: 359.5670, Validation Loss: 62.7226
+Epoch 3100, Train Loss: 332.7817, Validation Loss: 62.6235
+Epoch 3200, Train Loss: 339.8145, Validation Loss: 62.5249
+Epoch 3300, Train Loss: 347.7965, Validation Loss: 62.4106
+Epoch 3400, Train Loss: 308.4159, Validation Loss: 62.3354
+Epoch 3500, Train Loss: 326.6716, Validation Loss: 62.2795
+Epoch 3600, Train Loss: 349.8463, Validation Loss: 62.1819
+Epoch 3700, Train Loss: 348.7280, Validation Loss: 62.0950
+Epoch 3800, Train Loss: 341.6450, Validation Loss: 61.9887
+Epoch 3900, Train Loss: 314.8037, Validation Loss: 61.8662
+Epoch 4000, Train Loss: 324.5839, Validation Loss: 61.7388
+Epoch 4100, Train Loss: 333.4717, Validation Loss: 61.6226
+Epoch 4200, Train Loss: 327.2875, Validation Loss: 61.4900
+Epoch 4300, Train Loss: 328.9395, Validation Loss: 61.3666
+Epoch 4400, Train Loss: 327.2708, Validation Loss: 61.2968
+Epoch 4500, Train Loss: 326.3886, Validation Loss: 61.1849
+Epoch 4600, Train Loss: 334.6265, Validation Loss: 61.0089
+Epoch 4700, Train Loss: 331.4403, Validation Loss: 60.8901
+Epoch 4800, Train Loss: 331.7118, Validation Loss: 60.7436
+Epoch 4900, Train Loss: 350.7729, Validation Loss: 60.6479
+Epoch 5000, Train Loss: 341.6008, Validation Loss: 60.5865
+Epoch 5100, Train Loss: 334.3814, Validation Loss: 60.4887
+Epoch 5200, Train Loss: 311.9935, Validation Loss: 60.3210
+Epoch 5300, Train Loss: 317.7734, Validation Loss: 60.2372
+Epoch 5400, Train Loss: 342.0307, Validation Loss: 60.1185
+Epoch 5500, Train Loss: 316.5946, Validation Loss: 59.9347
+Epoch 5600, Train Loss: 310.0439, Validation Loss: 59.7977
+Epoch 5700, Train Loss: 295.5718, Validation Loss: 59.5721
+Epoch 5800, Train Loss: 305.5132, Validation Loss: 59.3951
+Epoch 5900, Train Loss: 300.4201, Validation Loss: 59.2833
+Epoch 6000, Train Loss: 316.6884, Validation Loss: 59.1156
+Epoch 6100, Train Loss: 341.3811, Validation Loss: 58.9455
+Epoch 6200, Train Loss: 301.0996, Validation Loss: 58.7791
+Epoch 6300, Train Loss: 328.3068, Validation Loss: 58.6463
+Epoch 6400, Train Loss: 342.2711, Validation Loss: 58.4383
+Epoch 6500, Train Loss: 342.4921, Validation Loss: 58.3189
+Epoch 6600, Train Loss: 326.1979, Validation Loss: 58.1628
+Epoch 6700, Train Loss: 344.5812, Validation Loss: 58.0255
+Epoch 6800, Train Loss: 315.7529, Validation Loss: 57.8579
+Epoch 6900, Train Loss: 315.7568, Validation Loss: 57.8007
+Epoch 7000, Train Loss: 363.1592, Validation Loss: 57.6600
+Epoch 7100, Train Loss: 322.5557, Validation Loss: 57.5927
+Epoch 7200, Train Loss: 319.2629, Validation Loss: 57.4215
+Epoch 7300, Train Loss: 352.5453, Validation Loss: 57.2429
+Epoch 7400, Train Loss: 283.3111, Validation Loss: 57.0872
+Epoch 7500, Train Loss: 318.4497, Validation Loss: 56.9261
+Epoch 7600, Train Loss: 322.0378, Validation Loss: 56.7323
+Epoch 7700, Train Loss: 273.5010, Validation Loss: 56.5851
+Epoch 7800, Train Loss: 345.4148, Validation Loss: 56.4162
+Epoch 7900, Train Loss: 307.4500, Validation Loss: 56.3240
+Epoch 8000, Train Loss: 301.4083, Validation Loss: 56.0909
+Epoch 8100, Train Loss: 304.8377, Validation Loss: 55.8906
+Epoch 8200, Train Loss: 321.6552, Validation Loss: 55.8146
+Epoch 8300, Train Loss: 293.2837, Validation Loss: 55.6040
+Epoch 8400, Train Loss: 309.7627, Validation Loss: 55.4399
+Epoch 8500, Train Loss: 302.8290, Validation Loss: 55.3056
+Epoch 8600, Train Loss: 294.7026, Validation Loss: 55.1195
+Epoch 8700, Train Loss: 297.8893, Validation Loss: 54.9838
+Epoch 8800, Train Loss: 300.0107, Validation Loss: 54.8727
+Epoch 8900, Train Loss: 329.4287, Validation Loss: 54.6380
+Epoch 9000, Train Loss: 309.1170, Validation Loss: 54.4899
+Epoch 9100, Train Loss: 290.8785, Validation Loss: 54.3139
+Epoch 9200, Train Loss: 301.0761, Validation Loss: 54.1245
+Epoch 9300, Train Loss: 316.2691, Validation Loss: 53.9917
+Epoch 9400, Train Loss: 294.4186, Validation Loss: 53.8301
+Epoch 9500, Train Loss: 305.0962, Validation Loss: 53.6232
+Epoch 9600, Train Loss: 287.6797, Validation Loss: 53.5165
+Epoch 9700, Train Loss: 301.7414, Validation Loss: 53.3818
+Epoch 9800, Train Loss: 296.9471, Validation Loss: 53.2050
+Epoch 9900, Train Loss: 272.0133, Validation Loss: 53.1074
+Epoch 10000, Train Loss: 296.8139, Validation Loss: 53.0224
+Epoch 10100, Train Loss: 275.4201, Validation Loss: 52.8755
+Epoch 10200, Train Loss: 308.2636, Validation Loss: 52.6695
+Epoch 10300, Train Loss: 275.2623, Validation Loss: 52.5071
+Epoch 10400, Train Loss: 305.9419, Validation Loss: 52.3515
+Epoch 10500, Train Loss: 293.6203, Validation Loss: 52.2429
+Epoch 10600, Train Loss: 295.1009, Validation Loss: 52.0759
+Epoch 10700, Train Loss: 283.2244, Validation Loss: 51.8571
+Epoch 10800, Train Loss: 300.1495, Validation Loss: 51.6583
+Epoch 10900, Train Loss: 304.9967, Validation Loss: 51.5254
+Epoch 11000, Train Loss: 271.3439, Validation Loss: 51.3913
+Epoch 11100, Train Loss: 284.2866, Validation Loss: 51.2777
+Epoch 11200, Train Loss: 300.0691, Validation Loss: 51.0991
+Epoch 11300, Train Loss: 287.0792, Validation Loss: 50.9728
+Epoch 11400, Train Loss: 292.9459, Validation Loss: 50.7827
+Epoch 11500, Train Loss: 275.8112, Validation Loss: 50.6562
+Epoch 11600, Train Loss: 266.7628, Validation Loss: 50.4956
+Epoch 11700, Train Loss: 303.8507, Validation Loss: 50.3666
+Epoch 11800, Train Loss: 267.1707, Validation Loss: 50.2686
+Epoch 11900, Train Loss: 285.5436, Validation Loss: 50.1336
+Epoch 12000, Train Loss: 265.6245, Validation Loss: 49.9651
+Epoch 12100, Train Loss: 295.8571, Validation Loss: 49.8012
+Epoch 12200, Train Loss: 281.1081, Validation Loss: 49.6574
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 490, in <module>
+    model_dir = "./models"
+            ^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

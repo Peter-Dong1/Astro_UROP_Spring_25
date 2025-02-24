@@ -1,0 +1,30 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+8
+Beginning training...
+Epoch 1 | Train Loss: 19.00 | Valid Loss: 18.68
+Epoch 1001 | Train Loss: 0.04 | Valid Loss: 0.04
+Epoch 2001 | Train Loss: 0.04 | Valid Loss: 0.04
+Epoch 3001 | Train Loss: 0.03 | Valid Loss: 0.04
+Epoch 4001 | Train Loss: 0.03 | Valid Loss: 0.04
+Epoch 5001 | Train Loss: 0.03 | Valid Loss: 0.04
+Epoch 6001 | Train Loss: 0.03 | Valid Loss: 0.03
+Epoch 7001 | Train Loss: 0.03 | Valid Loss: 0.03
+Epoch 8001 | Train Loss: 0.03 | Valid Loss: 0.03
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 349, in <module>
+    loss.backward()
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/__init__.py", line 340, in backward
+    grad_tensors_ = _make_grads(tensors, grad_tensors_, is_grads_batched=False)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/__init__.py", line 220, in _make_grads
+    torch.ones_like(out, memory_format=torch.preserve_format)
+KeyboardInterrupt

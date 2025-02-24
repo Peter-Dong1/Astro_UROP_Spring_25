@@ -1,0 +1,7 @@
+{"time":"2025-02-21T10:22:26.727875087-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250221_102226-3nzsmutg/logs/debug-core.log"}
+{"time":"2025-02-21T10:22:26.838162523-05:00","level":"INFO","msg":"created new stream","id":"3nzsmutg"}
+{"time":"2025-02-21T10:22:26.838182503-05:00","level":"INFO","msg":"stream: started","id":"3nzsmutg"}
+{"time":"2025-02-21T10:22:26.838190073-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"3nzsmutg"}
+{"time":"2025-02-21T10:22:26.838197343-05:00","level":"INFO","msg":"handler: started","stream_id":"3nzsmutg"}
+{"time":"2025-02-21T10:22:26.838987356-05:00","level":"INFO","msg":"sender: started","stream_id":"3nzsmutg"}
+{"time":"2025-02-21T10:22:27.021546946-05:00","level":"INFO","msg":"Starting system monitor"}

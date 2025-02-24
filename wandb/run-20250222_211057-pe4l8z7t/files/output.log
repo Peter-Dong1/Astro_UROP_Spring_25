@@ -1,0 +1,46 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 79970 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 765.3455, Validation Loss: 1041.1142
+Epoch 100, Train Loss: 10.4878, Validation Loss: 352.9223
+Epoch 200, Train Loss: 9.6616, Validation Loss: 344.3604
+Epoch 300, Train Loss: 7.7532, Validation Loss: 351.4763
+Epoch 400, Train Loss: 7.9110, Validation Loss: 358.8067
+Epoch 500, Train Loss: 7.8272, Validation Loss: 366.9167
+Epoch 600, Train Loss: 6.9756, Validation Loss: 375.5311
+Epoch 700, Train Loss: 6.5296, Validation Loss: 385.0575
+Epoch 800, Train Loss: 5.3407, Validation Loss: 394.1647
+Epoch 900, Train Loss: 5.1923, Validation Loss: 401.7919
+Epoch 1000, Train Loss: 6.3361, Validation Loss: 407.8654
+Epoch 1100, Train Loss: 5.2586, Validation Loss: 415.0946
+Epoch 1200, Train Loss: 5.6895, Validation Loss: 419.8246
+Epoch 1300, Train Loss: 3.8957, Validation Loss: 425.6948
+Epoch 1400, Train Loss: 4.0009, Validation Loss: 431.2279
+Epoch 1500, Train Loss: 4.2487, Validation Loss: 433.3521
+Epoch 1600, Train Loss: 4.5857, Validation Loss: 436.4226
+Epoch 1700, Train Loss: 4.4649, Validation Loss: 440.3161
+Epoch 1800, Train Loss: 4.0875, Validation Loss: 443.4181
+Epoch 1900, Train Loss: 3.3284, Validation Loss: 446.6211
+Epoch 2000, Train Loss: 4.0196, Validation Loss: 448.4409
+Epoch 2100, Train Loss: 3.7966, Validation Loss: 448.6556
+Epoch 2200, Train Loss: 3.6928, Validation Loss: 451.4809
+Epoch 2300, Train Loss: 4.0773, Validation Loss: 452.0975
+Epoch 2400, Train Loss: 3.2485, Validation Loss: 455.1998
+Epoch 2500, Train Loss: 3.1105, Validation Loss: 455.3344
+Epoch 2600, Train Loss: 3.4568, Validation Loss: 456.1322
+Epoch 2700, Train Loss: 2.7221, Validation Loss: 456.4154
+Epoch 2800, Train Loss: 3.0781, Validation Loss: 458.1590
+Epoch 2900, Train Loss: 2.6452, Validation Loss: 458.2994
+Epoch 3000, Train Loss: 3.0316, Validation Loss: 459.4017
+Epoch 3100, Train Loss: 2.5285, Validation Loss: 460.3077
+Epoch 3200, Train Loss: 2.4518, Validation Loss: 460.9879
+Epoch 3300, Train Loss: 2.6883, Validation Loss: 460.0990
+Epoch 3400, Train Loss: 2.4293, Validation Loss: 461.8867
+Epoch 3500, Train Loss: 2.4752, Validation Loss: 460.3769
+Epoch 3600, Train Loss: 2.6422, Validation Loss: 460.7256
+Epoch 3700, Train Loss: 2.8130, Validation Loss: 459.9073
+Epoch 3800, Train Loss: 2.8293, Validation Loss: 462.0242

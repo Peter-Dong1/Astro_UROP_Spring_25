@@ -1,0 +1,17 @@
+{"time":"2025-02-18T14:49:53.543761377-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250218_144953-00f0vpt6/logs/debug-core.log"}
+{"time":"2025-02-18T14:49:53.648291003-05:00","level":"INFO","msg":"created new stream","id":"00f0vpt6"}
+{"time":"2025-02-18T14:49:53.648311063-05:00","level":"INFO","msg":"stream: started","id":"00f0vpt6"}
+{"time":"2025-02-18T14:49:53.648321253-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"00f0vpt6"}
+{"time":"2025-02-18T14:49:53.648328493-05:00","level":"INFO","msg":"sender: started","stream_id":"00f0vpt6"}
+{"time":"2025-02-18T14:49:53.648323223-05:00","level":"INFO","msg":"handler: started","stream_id":"00f0vpt6"}
+{"time":"2025-02-18T14:49:53.858669169-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T17:43:24.238386575-05:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/peterdong1951-massachusetts-institute-of-technology/trainmodel_16384_11k/00f0vpt6/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2025-02-19T01:08:29.354230965-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-19T01:08:29.354841887-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-19T01:08:29.672769279-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-19T01:08:29.77463097-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-02-19T01:08:30.778045583-05:00","level":"INFO","msg":"stream: closing","id":"00f0vpt6"}
+{"time":"2025-02-19T01:08:30.778059253-05:00","level":"INFO","msg":"handler: closed","stream_id":"00f0vpt6"}
+{"time":"2025-02-19T01:08:30.778065203-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"00f0vpt6"}
+{"time":"2025-02-19T01:08:30.778071813-05:00","level":"INFO","msg":"sender: closed","stream_id":"00f0vpt6"}
+{"time":"2025-02-19T01:08:30.778709865-05:00","level":"INFO","msg":"stream: closed","id":"00f0vpt6"}

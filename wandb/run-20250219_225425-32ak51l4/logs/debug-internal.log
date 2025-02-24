@@ -1,0 +1,7 @@
+{"time":"2025-02-19T22:54:25.25833256-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250219_225425-32ak51l4/logs/debug-core.log"}
+{"time":"2025-02-19T22:54:25.362679518-05:00","level":"INFO","msg":"created new stream","id":"32ak51l4"}
+{"time":"2025-02-19T22:54:25.362700938-05:00","level":"INFO","msg":"stream: started","id":"32ak51l4"}
+{"time":"2025-02-19T22:54:25.362708858-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"32ak51l4"}
+{"time":"2025-02-19T22:54:25.362716068-05:00","level":"INFO","msg":"sender: started","stream_id":"32ak51l4"}
+{"time":"2025-02-19T22:54:25.362725598-05:00","level":"INFO","msg":"handler: started","stream_id":"32ak51l4"}
+{"time":"2025-02-19T22:54:25.492526184-05:00","level":"INFO","msg":"Starting system monitor"}

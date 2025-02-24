@@ -1,0 +1,43 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 47233.4152, Validation Loss: 3406.1790
+Epoch 100, Train Loss: 4090.2076, Validation Loss: 192.2890
+Epoch 200, Train Loss: 2731.9431, Validation Loss: 166.9685
+Epoch 300, Train Loss: 2921.7037, Validation Loss: 166.1502
+Epoch 400, Train Loss: 3117.9062, Validation Loss: 165.7465
+Epoch 500, Train Loss: 3044.5921, Validation Loss: 165.3342
+Epoch 600, Train Loss: 2935.7500, Validation Loss: 164.4624
+Epoch 700, Train Loss: 2942.2199, Validation Loss: 164.0717
+Epoch 800, Train Loss: 2884.9718, Validation Loss: 162.8552
+Epoch 900, Train Loss: 2880.4300, Validation Loss: 162.6385
+Epoch 1000, Train Loss: 2730.8608, Validation Loss: 161.7638
+Epoch 1100, Train Loss: 2697.7148, Validation Loss: 161.1642
+Epoch 1200, Train Loss: 2645.5265, Validation Loss: 161.0727
+Epoch 1300, Train Loss: 2796.8538, Validation Loss: 160.5578
+Epoch 1400, Train Loss: 2995.2115, Validation Loss: 160.6539
+Epoch 1500, Train Loss: 2467.9445, Validation Loss: 160.2124
+Epoch 1600, Train Loss: 2871.9523, Validation Loss: 159.8202
+Epoch 1700, Train Loss: 2497.0304, Validation Loss: 159.2101
+Epoch 1800, Train Loss: 2407.0717, Validation Loss: 158.0119
+Epoch 1900, Train Loss: 2421.7347, Validation Loss: 157.0628
+Epoch 2000, Train Loss: 2460.9598, Validation Loss: 155.5992
+Epoch 2100, Train Loss: 2553.6470, Validation Loss: 155.5621
+Epoch 2200, Train Loss: 2439.1490, Validation Loss: 154.4182
+Epoch 2300, Train Loss: 2478.8295, Validation Loss: 154.0786
+Epoch 2400, Train Loss: 2766.3973, Validation Loss: 152.9669
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 552, in <module>
+    torch.save(model.state_dict(), os.path.join(model_dir, 'transformer_vae_best.pt'))
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 850, in save
+    _save(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 1088, in _save
+    pickler.dump(obj)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 1063, in persistent_id
+    if str(storage.device) != "meta" and storage.data_ptr() != 0:
+       ^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

@@ -1,0 +1,72 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+10
+Beginning training...
+Epoch 1 | Train Loss: 12.9503 | Valid Loss: 3.8150
+Epoch 1001 | Train Loss: 0.1066 | Valid Loss: 0.1627
+Epoch 2001 | Train Loss: 0.1149 | Valid Loss: 0.1643
+Epoch 3001 | Train Loss: 0.0922 | Valid Loss: 0.1615
+Epoch 4001 | Train Loss: 0.0806 | Valid Loss: 0.1659
+Epoch 5001 | Train Loss: 0.0709 | Valid Loss: 0.1715
+Epoch 6001 | Train Loss: 0.0635 | Valid Loss: 0.1783
+Epoch 7001 | Train Loss: 0.0668 | Valid Loss: 0.1894
+Epoch 8001 | Train Loss: 0.0530 | Valid Loss: 0.2068
+Epoch 9001 | Train Loss: 0.0373 | Valid Loss: 0.1912
+Epoch 10001 | Train Loss: 0.0357 | Valid Loss: 0.1799
+Epoch 11001 | Train Loss: 0.0299 | Valid Loss: 0.1673
+Epoch 12001 | Train Loss: 0.0392 | Valid Loss: 0.1639
+Epoch 13001 | Train Loss: 0.0272 | Valid Loss: 0.1687
+Epoch 14001 | Train Loss: 0.0302 | Valid Loss: 0.1624
+Epoch 15001 | Train Loss: 0.0349 | Valid Loss: 0.1591
+Epoch 16001 | Train Loss: 0.0259 | Valid Loss: 0.1679
+Epoch 17001 | Train Loss: 0.0276 | Valid Loss: 0.1655
+Epoch 18001 | Train Loss: 0.0263 | Valid Loss: 0.1643
+Epoch 19001 | Train Loss: 0.0267 | Valid Loss: 0.1699
+Epoch 20001 | Train Loss: 0.0269 | Valid Loss: 0.1660
+Epoch 21001 | Train Loss: 0.0275 | Valid Loss: 0.1769
+Epoch 22001 | Train Loss: 0.0264 | Valid Loss: 0.1693
+Epoch 23001 | Train Loss: 0.0233 | Valid Loss: 0.1782
+Epoch 24001 | Train Loss: 0.0221 | Valid Loss: 0.1786
+Epoch 25001 | Train Loss: 0.0275 | Valid Loss: 0.1759
+Epoch 26001 | Train Loss: 0.0240 | Valid Loss: 0.1855
+Epoch 27001 | Train Loss: 0.0247 | Valid Loss: 0.1816
+Epoch 28001 | Train Loss: 0.0210 | Valid Loss: 0.1782
+Epoch 29001 | Train Loss: 0.0250 | Valid Loss: 0.1831
+Epoch 30001 | Train Loss: 0.0198 | Valid Loss: 0.1869
+Epoch 31001 | Train Loss: 0.0248 | Valid Loss: 0.1927
+Epoch 32001 | Train Loss: 0.0362 | Valid Loss: 0.1724
+Epoch 33001 | Train Loss: 0.0192 | Valid Loss: 0.1886
+Epoch 34001 | Train Loss: 0.0224 | Valid Loss: 0.1989
+Epoch 35001 | Train Loss: 0.0205 | Valid Loss: 0.1932
+Epoch 36001 | Train Loss: 0.0206 | Valid Loss: 0.2056
+Epoch 37001 | Train Loss: 0.0303 | Valid Loss: 0.2072
+Epoch 38001 | Train Loss: 0.0190 | Valid Loss: 0.2115
+Epoch 39001 | Train Loss: 0.0186 | Valid Loss: 0.2146
+Epoch 40001 | Train Loss: 0.0209 | Valid Loss: 0.2068
+Epoch 41001 | Train Loss: 0.0448 | Valid Loss: 0.2197
+Epoch 42001 | Train Loss: 0.0255 | Valid Loss: 0.2148
+Epoch 43001 | Train Loss: 0.0165 | Valid Loss: 0.2224
+Epoch 44001 | Train Loss: 0.0173 | Valid Loss: 0.2282
+Epoch 45001 | Train Loss: 0.0170 | Valid Loss: 0.2300
+Epoch 46001 | Train Loss: 0.0173 | Valid Loss: 0.2277
+Epoch 47001 | Train Loss: 0.0179 | Valid Loss: 0.2329
+Epoch 48001 | Train Loss: 0.0223 | Valid Loss: 0.2341
+Epoch 49001 | Train Loss: 0.0224 | Valid Loss: 0.2326
+Epoch 50001 | Train Loss: 0.0184 | Valid Loss: 0.2380
+Epoch 51001 | Train Loss: 0.0210 | Valid Loss: 0.2333
+Epoch 52001 | Train Loss: 0.0183 | Valid Loss: 0.2339
+Epoch 53001 | Train Loss: 0.0159 | Valid Loss: 0.2359
+Epoch 54001 | Train Loss: 0.0186 | Valid Loss: 0.2361
+Epoch 55001 | Train Loss: 0.0200 | Valid Loss: 0.2321
+Epoch 56001 | Train Loss: 0.0288 | Valid Loss: 0.2410
+Epoch 57001 | Train Loss: 0.0151 | Valid Loss: 0.2424
+Epoch 58001 | Train Loss: 0.0162 | Valid Loss: 0.2405
+Epoch 59001 | Train Loss: 0.0221 | Valid Loss: 0.2482
+Saved Model at /home/pdong/Astro UROP/models/RNN_VAE_Err.h5
+losses saved!

@@ -1,0 +1,25 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+tensor([6.2943e+08, 6.2945e+08, 6.2946e+08, 6.2948e+08, 6.2949e+08, 6.2951e+08,
+        6.2952e+08, 6.2953e+08, 6.2955e+08, 6.2956e+08, 6.2958e+08, 6.2959e+08,
+        6.2961e+08, 6.2962e+08, 6.2963e+08, 6.2965e+08, 6.2966e+08, 6.2968e+08,
+        6.2969e+08, 6.2971e+08])
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 494, in <module>
+    for batch_idx, (x, lengths) in enumerate(train_loader):
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 701, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 757, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/utils/data/_utils/fetch.py", line 55, in fetch
+    return self.collate_fn(data)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 348, in collate_fn_err
+    lc[i] = lc[i] - lc[i][0] + 1
+                    ~~~~~^^^
+IndexError: invalid index of a 0-dim tensor. Use `tensor.item()` in Python or `tensor.item<T>()` in C++ to convert a 0-dim tensor to a number

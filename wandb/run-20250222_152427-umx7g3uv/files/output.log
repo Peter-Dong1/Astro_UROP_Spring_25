@@ -1,0 +1,41 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 21715.7411, Validation Loss: 4070.1904
+Epoch 100, Train Loss: 2403.8170, Validation Loss: 251.7841
+Epoch 200, Train Loss: 1627.7610, Validation Loss: 197.8570
+Epoch 300, Train Loss: 1393.5583, Validation Loss: 197.5145
+Epoch 400, Train Loss: 1501.5996, Validation Loss: 197.1816
+Epoch 500, Train Loss: 1601.8698, Validation Loss: 196.7756
+Epoch 600, Train Loss: 1500.6766, Validation Loss: 196.3556
+Epoch 700, Train Loss: 1552.5232, Validation Loss: 195.8730
+Epoch 800, Train Loss: 1512.7012, Validation Loss: 195.4835
+Epoch 900, Train Loss: 1457.3735, Validation Loss: 195.2094
+Epoch 1000, Train Loss: 1577.0642, Validation Loss: 194.7430
+Epoch 1100, Train Loss: 1571.0412, Validation Loss: 194.6894
+Epoch 1200, Train Loss: 1408.3147, Validation Loss: 194.3315
+Epoch 1300, Train Loss: 1525.3348, Validation Loss: 194.1171
+Epoch 1400, Train Loss: 1402.7846, Validation Loss: 193.6428
+Epoch 1500, Train Loss: 1508.2074, Validation Loss: 193.4625
+Epoch 1600, Train Loss: 1503.8788, Validation Loss: 193.0641
+Epoch 1700, Train Loss: 1480.4509, Validation Loss: 193.0817
+Epoch 1800, Train Loss: 1517.2181, Validation Loss: 192.8612
+Epoch 1900, Train Loss: 1394.1406, Validation Loss: 192.7065
+Epoch 2000, Train Loss: 1455.0359, Validation Loss: 192.3542
+Epoch 2100, Train Loss: 1469.8214, Validation Loss: 191.9276
+Epoch 2200, Train Loss: 1601.3449, Validation Loss: 191.5782
+Epoch 2300, Train Loss: 1431.8747, Validation Loss: 191.4244
+Epoch 2400, Train Loss: 1464.3878, Validation Loss: 191.1796
+Epoch 2500, Train Loss: 1562.2550, Validation Loss: 190.7263
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 552, in <module>
+    torch.save(model.state_dict(), os.path.join(model_dir, 'transformer_vae_best.pt'))
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 850, in save
+    _save(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 1114, in _save
+    zip_file.write_record(name, storage, num_bytes)
+KeyboardInterrupt

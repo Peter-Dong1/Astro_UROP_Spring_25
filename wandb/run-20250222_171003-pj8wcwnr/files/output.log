@@ -1,0 +1,29 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Traceback (most recent call last):
+  File "/home/pdong/Astro UROP/trans_model.py", line 453, in <module>
+    lc_low, lc_med, lc_high = load_n_light_curves(4096 * 2, fits_files, band="all")
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 158, in load_n_light_curves
+    light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 158, in <listcomp>
+    light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 158, in <genexpr>
+    light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 92, in load_light_curve
+    data = hdul[1].data  # Assuming light curve data is in the second HDU
+           ~~~~^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/hdu/hdulist.py", line 396, in __getitem__
+    raise e
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/hdu/hdulist.py", line 390, in __getitem__
+    return self._try_while_unread_hdus(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/hdu/hdulist.py", line 1270, in _try_while_unread_hdus
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+IndexError: list index out of range

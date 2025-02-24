@@ -1,0 +1,100 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 3699949300589152768.0000, Validation Loss: nan
+Epoch 100, Train Loss: nan, Validation Loss: nan
+Epoch 200, Train Loss: nan, Validation Loss: nan
+Epoch 300, Train Loss: nan, Validation Loss: nan
+Epoch 400, Train Loss: nan, Validation Loss: nan
+Epoch 500, Train Loss: nan, Validation Loss: nan
+Epoch 600, Train Loss: nan, Validation Loss: nan
+Epoch 700, Train Loss: nan, Validation Loss: nan
+Epoch 800, Train Loss: nan, Validation Loss: nan
+Epoch 900, Train Loss: nan, Validation Loss: nan
+Epoch 1000, Train Loss: nan, Validation Loss: nan
+Epoch 1100, Train Loss: nan, Validation Loss: nan
+Epoch 1200, Train Loss: nan, Validation Loss: nan
+Epoch 1300, Train Loss: nan, Validation Loss: nan
+Epoch 1400, Train Loss: nan, Validation Loss: nan
+Epoch 1500, Train Loss: nan, Validation Loss: nan
+Epoch 1600, Train Loss: nan, Validation Loss: nan
+Epoch 1700, Train Loss: nan, Validation Loss: nan
+Epoch 1800, Train Loss: nan, Validation Loss: nan
+Epoch 1900, Train Loss: nan, Validation Loss: nan
+Epoch 2000, Train Loss: nan, Validation Loss: nan
+Epoch 2100, Train Loss: nan, Validation Loss: nan
+Epoch 2200, Train Loss: nan, Validation Loss: nan
+Epoch 2300, Train Loss: nan, Validation Loss: nan
+Epoch 2400, Train Loss: nan, Validation Loss: nan
+Epoch 2500, Train Loss: nan, Validation Loss: nan
+Epoch 2600, Train Loss: nan, Validation Loss: nan
+Epoch 2700, Train Loss: nan, Validation Loss: nan
+Epoch 2800, Train Loss: nan, Validation Loss: nan
+Epoch 2900, Train Loss: nan, Validation Loss: nan
+Epoch 3000, Train Loss: nan, Validation Loss: nan
+Epoch 3100, Train Loss: nan, Validation Loss: nan
+Epoch 3200, Train Loss: nan, Validation Loss: nan
+Epoch 3300, Train Loss: nan, Validation Loss: nan
+Epoch 3400, Train Loss: nan, Validation Loss: nan
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 547, in <module>
+    wandb.log({"Reconstruction": wandb.Image(fig)})
+                                 ^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 179, in __init__
+    self._initialize_from_data(data_or_path, mode, file_type)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 302, in _initialize_from_data
+    util.ensure_matplotlib_figure(data).savefig(buf, format="png")
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/figure.py", line 3490, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backend_bases.py", line 2184, in print_figure
+    result = print_method(
+             ^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backend_bases.py", line 2040, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+                                                                 ^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 481, in print_png
+    self._print_pil(filename_or_obj, "png", pil_kwargs, metadata)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 429, in _print_pil
+    FigureCanvasAgg.draw(self)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 382, in draw
+    self.figure.draw(self.renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 94, in draw_wrapper
+    result = draw(artist, renderer, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/figure.py", line 3257, in draw
+    mimage._draw_list_compositing_images(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/image.py", line 134, in _draw_list_compositing_images
+    a.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/axes/_base.py", line 3181, in draw
+    mimage._draw_list_compositing_images(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/image.py", line 134, in _draw_list_compositing_images
+    a.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/axis.py", line 1419, in draw
+    tick.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/axis.py", line 276, in draw
+    artist.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/lines.py", line 810, in draw
+    if self._marker and self._markersize > 0:
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/markers.py", line 266, in __bool__
+    def __bool__(self):
+
+KeyboardInterrupt

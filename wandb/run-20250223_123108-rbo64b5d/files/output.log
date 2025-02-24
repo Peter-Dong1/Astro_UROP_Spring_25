@@ -1,0 +1,33 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 79965 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 550.3303, Validation Loss: 755.5867
+Epoch 100, Train Loss: 78.2895, Validation Loss: 324.9093
+Epoch 200, Train Loss: 77.3735, Validation Loss: 332.1248
+Epoch 300, Train Loss: 78.9963, Validation Loss: 340.1312
+Epoch 400, Train Loss: 76.0427, Validation Loss: 348.5914
+Epoch 500, Train Loss: 75.4162, Validation Loss: 357.7176
+Epoch 600, Train Loss: 73.6272, Validation Loss: 369.4501
+Epoch 700, Train Loss: 86.5239, Validation Loss: 381.4959
+Epoch 800, Train Loss: 71.9492, Validation Loss: 392.4517
+Epoch 900, Train Loss: 70.6217, Validation Loss: 404.8945
+Epoch 1000, Train Loss: 76.7143, Validation Loss: 418.9890
+Epoch 1100, Train Loss: 67.7868, Validation Loss: 432.8362
+Epoch 1200, Train Loss: 66.6748, Validation Loss: 450.3696
+Epoch 1300, Train Loss: 67.6559, Validation Loss: 465.7332
+Epoch 1400, Train Loss: 63.8098, Validation Loss: 481.6490
+Epoch 1500, Train Loss: 61.7588, Validation Loss: 500.0013
+Epoch 1600, Train Loss: 61.9152, Validation Loss: 518.8086
+Epoch 1700, Train Loss: 59.3775, Validation Loss: 538.7910
+Epoch 1800, Train Loss: 59.3758, Validation Loss: 559.8147
+Epoch 1900, Train Loss: 57.6354, Validation Loss: 583.7830
+Epoch 2000, Train Loss: 60.4249, Validation Loss: 608.4308
+Epoch 2100, Train Loss: 54.0869, Validation Loss: 633.6658
+Epoch 2200, Train Loss: 58.5031, Validation Loss: 659.5306
+Epoch 2300, Train Loss: 69.4592, Validation Loss: 687.5941
+Epoch 2400, Train Loss: 56.4409, Validation Loss: 718.1748
+Epoch 2500, Train Loss: 47.3150, Validation Loss: 748.7459

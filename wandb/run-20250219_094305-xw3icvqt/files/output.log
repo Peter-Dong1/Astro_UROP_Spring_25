@@ -1,0 +1,27 @@
+hi
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+16372
+Beginning training...
+Epoch 1 | Train Loss: 8.68 | Valid Loss: 1.19
+Epoch 1001 | Train Loss: 0.09 | Valid Loss: 0.11
+Epoch 2001 | Train Loss: 0.06 | Valid Loss: 0.12
+Epoch 3001 | Train Loss: 0.05 | Valid Loss: 0.14
+Epoch 4001 | Train Loss: 0.05 | Valid Loss: 0.15
+Epoch 5001 | Train Loss: 0.05 | Valid Loss: 0.13
+Epoch 6001 | Train Loss: 0.04 | Valid Loss: 0.13
+Epoch 7001 | Train Loss: 0.04 | Valid Loss: 0.13
+Epoch 8001 | Train Loss: 0.05 | Valid Loss: 0.13
+Epoch 9001 | Train Loss: 0.04 | Valid Loss: 0.13
+Epoch 10001 | Train Loss: 0.04 | Valid Loss: 0.14
+Epoch 11001 | Train Loss: 0.03 | Valid Loss: 0.14
+Epoch 12001 | Train Loss: 0.04 | Valid Loss: 0.15
+Epoch 13001 | Train Loss: 0.04 | Valid Loss: 0.15
+Saved Model at /home/pdong/Astro UROP/models/more_bands_test.h5
+losses saved!

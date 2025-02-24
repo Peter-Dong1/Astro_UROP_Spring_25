@@ -1,0 +1,15 @@
+{"time":"2025-02-22T16:07:56.904000316-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250222_160756-3p0wiuwp/logs/debug-core.log"}
+{"time":"2025-02-22T16:07:57.008423798-05:00","level":"INFO","msg":"created new stream","id":"3p0wiuwp"}
+{"time":"2025-02-22T16:07:57.008445518-05:00","level":"INFO","msg":"stream: started","id":"3p0wiuwp"}
+{"time":"2025-02-22T16:07:57.008455478-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"3p0wiuwp"}
+{"time":"2025-02-22T16:07:57.008470599-05:00","level":"INFO","msg":"handler: started","stream_id":"3p0wiuwp"}
+{"time":"2025-02-22T16:07:57.008462668-05:00","level":"INFO","msg":"sender: started","stream_id":"3p0wiuwp"}
+{"time":"2025-02-22T16:07:57.140700005-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-22T16:09:26.573243419-05:00","level":"INFO","msg":"stream: closing","id":"3p0wiuwp"}
+{"time":"2025-02-22T16:09:26.573263079-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-22T16:09:26.573699411-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-22T16:09:26.902332535-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-22T16:09:27.026507843-05:00","level":"INFO","msg":"handler: closed","stream_id":"3p0wiuwp"}
+{"time":"2025-02-22T16:09:27.026526533-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"3p0wiuwp"}
+{"time":"2025-02-22T16:09:27.026565303-05:00","level":"INFO","msg":"sender: closed","stream_id":"3p0wiuwp"}
+{"time":"2025-02-22T16:09:27.027433756-05:00","level":"INFO","msg":"stream: closed","id":"3p0wiuwp"}

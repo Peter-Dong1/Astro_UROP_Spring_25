@@ -1,0 +1,82 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 42218.4196, Validation Loss: 3413.4485
+Epoch 100, Train Loss: 4366.3683, Validation Loss: 246.3094
+Epoch 200, Train Loss: 4392.4124, Validation Loss: 243.1126
+Epoch 300, Train Loss: 4662.8940, Validation Loss: 238.9333
+Epoch 400, Train Loss: 4581.9665, Validation Loss: 234.9848
+Epoch 500, Train Loss: 4590.9866, Validation Loss: 231.5967
+Epoch 600, Train Loss: 4823.6468, Validation Loss: 227.9717
+Epoch 700, Train Loss: 4333.4911, Validation Loss: 225.2216
+Epoch 800, Train Loss: 4241.2422, Validation Loss: 221.6504
+Epoch 900, Train Loss: 4238.8142, Validation Loss: 218.3769
+Epoch 1000, Train Loss: 4416.6691, Validation Loss: 216.7429
+Epoch 1100, Train Loss: 4089.5569, Validation Loss: 214.6460
+Epoch 1200, Train Loss: 4208.9305, Validation Loss: 212.7358
+Epoch 1300, Train Loss: 4013.4104, Validation Loss: 210.5879
+Epoch 1400, Train Loss: 3982.8742, Validation Loss: 208.6443
+Epoch 1500, Train Loss: 3995.1931, Validation Loss: 206.5509
+Epoch 1600, Train Loss: 4173.5173, Validation Loss: 206.0315
+Epoch 1700, Train Loss: 3887.7793, Validation Loss: 204.5976
+Epoch 1800, Train Loss: 3679.1390, Validation Loss: 202.8345
+Epoch 1900, Train Loss: 3936.5112, Validation Loss: 201.9499
+Epoch 2000, Train Loss: 3816.9403, Validation Loss: 200.7289
+Epoch 2100, Train Loss: 3700.1842, Validation Loss: 199.4893
+Epoch 2200, Train Loss: 3844.6395, Validation Loss: 198.7346
+Epoch 2300, Train Loss: 4023.6233, Validation Loss: 197.9102
+Epoch 2400, Train Loss: 3425.8549, Validation Loss: 198.0275
+Epoch 2500, Train Loss: 3518.7840, Validation Loss: 197.4297
+Epoch 2600, Train Loss: 3824.7740, Validation Loss: 195.9847
+Epoch 2700, Train Loss: 3611.4347, Validation Loss: 195.3400
+Epoch 2800, Train Loss: 3687.2455, Validation Loss: 193.7870
+Epoch 2900, Train Loss: 3289.2506, Validation Loss: 191.3744
+Epoch 3000, Train Loss: 3145.0957, Validation Loss: 191.4122
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 505, in <module>
+    x_hat, mu, logvar = model(x, lengths)
+                        ^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 248, in forward
+    encoded = self.encoder(encoder_input, mask)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 121, in forward
+    x = self.transformer(x, src_key_padding_mask=mask)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py", line 511, in forward
+    output = mod(
+             ^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py", line 833, in forward
+    self.self_attn.out_proj.weight,
+    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1918, in __getattr__
+    def __getattr__(self, name: str) -> Any:
+
+KeyboardInterrupt

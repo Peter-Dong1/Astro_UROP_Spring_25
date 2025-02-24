@@ -1,0 +1,62 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+10
+Beginning training...
+Epoch 1 | Train Loss: 20.93 | Valid Loss: 18.43
+Epoch 1001 | Train Loss: 0.07 | Valid Loss: 0.07
+Epoch 2001 | Train Loss: 0.05 | Valid Loss: 0.08
+Epoch 3001 | Train Loss: 0.05 | Valid Loss: 0.07
+Epoch 4001 | Train Loss: 0.05 | Valid Loss: 0.07
+Epoch 5001 | Train Loss: 0.05 | Valid Loss: 0.07
+Epoch 6001 | Train Loss: 0.05 | Valid Loss: 0.07
+Epoch 7001 | Train Loss: 0.05 | Valid Loss: 0.07
+Epoch 8001 | Train Loss: 0.04 | Valid Loss: 0.07
+Epoch 9001 | Train Loss: 0.04 | Valid Loss: 0.07
+Epoch 10001 | Train Loss: 0.05 | Valid Loss: 0.07
+Epoch 11001 | Train Loss: 0.04 | Valid Loss: 0.07
+Epoch 12001 | Train Loss: 0.04 | Valid Loss: 0.07
+Epoch 13001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 14001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 15001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 16001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 17001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 18001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 19001 | Train Loss: 0.04 | Valid Loss: 0.08
+Epoch 20001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 21001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 22001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 23001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 24001 | Train Loss: 0.03 | Valid Loss: 0.07
+Epoch 25001 | Train Loss: 0.03 | Valid Loss: 0.06
+Traceback (most recent call last):
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/PIL/ImageFile.py", line 554, in _save
+    fh = fp.fileno()
+         ^^^^^^^^^
+AttributeError: '_idat' object has no attribute 'fileno'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 401, in <module>
+    wandb.log({"Reconstruction": wandb.Image(fig)})
+                                 ^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 179, in __init__
+    self._initialize_from_data(data_or_path, mode, file_type)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 336, in _initialize_from_data
+    self._image.save(tmp_path, transparency=None)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/PIL/Image.py", line 2605, in save
+    save_handler(self, fp, filename)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/PIL/PngImagePlugin.py", line 1488, in _save
+    ImageFile._save(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/PIL/ImageFile.py", line 558, in _save
+    _encode_tile(im, fp, tile, bufsize, None, exc)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/PIL/ImageFile.py", line 584, in _encode_tile
+    errcode, data = encoder.encode(bufsize)[1:]
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

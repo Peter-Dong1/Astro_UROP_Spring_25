@@ -1,0 +1,1 @@
+{"epoch":49901,"train_loss":0.019451661656300228,"_timestamp":1.7399365261923015e+09,"_runtime":285.156424519,"_step":999,"Reconstruction":{"_type":"image-file","sha256":"5d8c77f416e52c01fcfcefe21b1bc3ab44e0105d464721bfc0a94e204a639f2c","size":41622,"path":"media/images/Reconstruction_999_5d8c77f416e52c01fcfc.png","format":"png","width":800,"height":500},"_wandb":{"runtime":285}}

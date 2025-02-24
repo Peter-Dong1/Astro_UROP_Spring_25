@@ -1,0 +1,31 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 31289.7321, Validation Loss: 3238.4551
+Epoch 100, Train Loss: 2489.6295, Validation Loss: 890.7256
+Epoch 200, Train Loss: 1249.1362, Validation Loss: 628.6545
+Epoch 300, Train Loss: 1256.0324, Validation Loss: 606.2463
+Epoch 400, Train Loss: 1293.1643, Validation Loss: 595.5860
+Epoch 500, Train Loss: 1167.3101, Validation Loss: 590.7252
+Epoch 600, Train Loss: 989.8249, Validation Loss: 588.8630
+Epoch 700, Train Loss: 1153.5868, Validation Loss: 588.2953
+Epoch 800, Train Loss: 1194.9671, Validation Loss: 587.9664
+Epoch 900, Train Loss: 1229.1670, Validation Loss: 587.6883
+Epoch 1000, Train Loss: 1123.7956, Validation Loss: 586.9639
+Epoch 1100, Train Loss: 1185.4428, Validation Loss: 586.2157
+Epoch 1200, Train Loss: 1180.7015, Validation Loss: 585.5157
+Epoch 1300, Train Loss: 1086.4361, Validation Loss: 585.2155
+Epoch 1400, Train Loss: 1187.8754, Validation Loss: 584.7598
+Epoch 1500, Train Loss: 1254.4954, Validation Loss: 583.4601
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 552, in <module>
+    torch.save(model.state_dict(), os.path.join(model_dir, 'transformer_vae_best.pt'))
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 849, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 690, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt

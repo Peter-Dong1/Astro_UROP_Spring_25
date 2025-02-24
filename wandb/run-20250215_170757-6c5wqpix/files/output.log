@@ -1,0 +1,18 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+Traceback (most recent call last):
+  File "/home/pdong/Astro UROP/cont_model.py", line 231, in <module>
+    train_dataset = load_n_light_curves(16384/2, fits_files, band = "med")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 148, in load_n_light_curves
+    fits_files = random.sample(fits_files, n)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/random.py", line 457, in sample
+    result = [None] * k
+             ~~~~~~~^~~
+TypeError: can't multiply sequence by non-int of type 'float'

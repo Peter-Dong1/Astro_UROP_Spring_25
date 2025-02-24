@@ -1,0 +1,27 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 234035927917.7143, Validation Loss: nan
+Epoch 100, Train Loss: nan, Validation Loss: nan
+Epoch 200, Train Loss: nan, Validation Loss: nan
+Epoch 300, Train Loss: nan, Validation Loss: nan
+Epoch 400, Train Loss: nan, Validation Loss: nan
+Epoch 500, Train Loss: nan, Validation Loss: nan
+Epoch 600, Train Loss: nan, Validation Loss: nan
+Epoch 700, Train Loss: nan, Validation Loss: nan
+Epoch 800, Train Loss: nan, Validation Loss: nan
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 497, in <module>
+    loss.backward()
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

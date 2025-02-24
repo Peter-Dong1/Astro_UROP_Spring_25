@@ -1,0 +1,61 @@
+{
+  "os":  "Linux-3.10.0-1062.el7.x86_64-x86_64-with-glibc2.17",
+  "python":  "CPython 3.11.11",
+  "startedAt":  "2025-02-22T22:02:40.079987Z",
+  "program":  "/home/pdong/Astro UROP/trans_model.py",
+  "email":  "peterdong1951@gmail.com",
+  "root":  "/orcd/home/002/pdong/Astro UROP",
+  "host":  "node279",
+  "executable":  "/home/pdong/.conda/envs/myenv/bin/python",
+  "cpu_count":  20,
+  "cpu_count_logical":  20,
+  "disk":  {
+    "/":  {
+      "total":  "282468790272",
+      "used":  "28355276800"
+    }
+  },
+  "memory":  {
+    "total":  "67150217216"
+  },
+  "cpu":  {
+    "count":  20,
+    "countLogical":  20
+  },
+  "slurm":  {
+    "cluster_name":  "eofe7",
+    "conf":  "/etc/slurm/slurm.conf",
+    "cpus_on_node":  "4",
+    "gtids":  "0",
+    "job_account":  "mit_general",
+    "job_cpus_per_node":  "4",
+    "job_gid":  "244657",
+    "job_id":  "63379170",
+    "job_name":  "trans",
+    "job_nodelist":  "node279",
+    "job_num_nodes":  "1",
+    "job_partition":  "sched_any_quicktest",
+    "job_qos":  "normal",
+    "job_uid":  "244657",
+    "job_user":  "pdong",
+    "jobid":  "63379170",
+    "localid":  "0",
+    "mem_per_cpu":  "1000",
+    "nnodes":  "1",
+    "node_aliases":  "(null)",
+    "nodeid":  "0",
+    "nodelist":  "node279",
+    "nprocs":  "4",
+    "ntasks":  "4",
+    "prio_process":  "0",
+    "procid":  "0",
+    "script_context":  "prolog_task",
+    "submit_dir":  "/orcd/home/002/pdong/Astro UROP",
+    "submit_host":  "orcd-login001.mit.edu",
+    "task_pid":  "16853",
+    "tasks_per_node":  "4",
+    "topology_addr":  "node279",
+    "topology_addr_pattern":  "node",
+    "working_cluster":  "eofe7:eofe-service003:6817:9728:101"
+  }
+}

@@ -1,0 +1,16 @@
+{"time":"2025-02-14T23:37:10.774108139-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250214_233710-wp0925br/logs/debug-core.log"}
+{"time":"2025-02-14T23:37:10.883922393-05:00","level":"INFO","msg":"created new stream","id":"wp0925br"}
+{"time":"2025-02-14T23:37:10.883948783-05:00","level":"INFO","msg":"stream: started","id":"wp0925br"}
+{"time":"2025-02-14T23:37:10.883955063-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"wp0925br"}
+{"time":"2025-02-14T23:37:10.883962693-05:00","level":"INFO","msg":"sender: started","stream_id":"wp0925br"}
+{"time":"2025-02-14T23:37:10.884007763-05:00","level":"INFO","msg":"handler: started","stream_id":"wp0925br"}
+{"time":"2025-02-14T23:37:11.062249117-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-14T23:41:52.310445938-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-14T23:41:52.31094162-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-14T23:41:52.712893548-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-14T23:41:52.82717805-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-02-14T23:41:53.830346495-05:00","level":"INFO","msg":"stream: closing","id":"wp0925br"}
+{"time":"2025-02-14T23:41:53.830360325-05:00","level":"INFO","msg":"handler: closed","stream_id":"wp0925br"}
+{"time":"2025-02-14T23:41:53.830366615-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"wp0925br"}
+{"time":"2025-02-14T23:41:53.830373025-05:00","level":"INFO","msg":"sender: closed","stream_id":"wp0925br"}
+{"time":"2025-02-14T23:41:53.831047778-05:00","level":"INFO","msg":"stream: closed","id":"wp0925br"}

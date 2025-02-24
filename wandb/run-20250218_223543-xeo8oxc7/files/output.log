@@ -1,0 +1,21 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+3
+Beginning training...
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 380, in <module>
+    x_benchmark, lengths_benchmark = collate_fn_err([benchmark_sample])
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 268, in collate_fn_err
+    rate = [torch.tensor(lc['RATE'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 268, in <listcomp>
+    rate = [torch.tensor(lc['RATE'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
+                         ~~^^^^^^^^
+TypeError: tuple indices must be integers or slices, not str

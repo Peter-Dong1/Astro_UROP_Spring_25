@@ -1,0 +1,22 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+10
+Beginning training...
+Epoch 1 | Train Loss: 19.7368 | Valid Loss: 12.6595
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 349, in <module>
+    loss.backward()
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

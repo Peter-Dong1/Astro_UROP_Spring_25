@@ -1,0 +1,21 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 45527.9062, Validation Loss: 5314.5117
+Epoch 100, Train Loss: 6772.5262, Validation Loss: 673.9139
+Epoch 200, Train Loss: 6802.9235, Validation Loss: 671.2848
+Epoch 300, Train Loss: 6525.0971, Validation Loss: 668.4193
+Epoch 400, Train Loss: 5899.8393, Validation Loss: 665.5673
+Epoch 500, Train Loss: 6433.9286, Validation Loss: 662.7845
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 552, in <module>
+    torch.save(model.state_dict(), os.path.join(model_dir, 'transformer_vae_best.pt'))
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 849, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/serialization.py", line 690, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt

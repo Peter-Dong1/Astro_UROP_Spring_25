@@ -1,0 +1,16 @@
+{"time":"2025-02-18T23:23:47.6426268-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250218_232347-nqn78pl1/logs/debug-core.log"}
+{"time":"2025-02-18T23:23:47.74680041-05:00","level":"INFO","msg":"created new stream","id":"nqn78pl1"}
+{"time":"2025-02-18T23:23:47.7468227-05:00","level":"INFO","msg":"stream: started","id":"nqn78pl1"}
+{"time":"2025-02-18T23:23:47.74683993-05:00","level":"INFO","msg":"sender: started","stream_id":"nqn78pl1"}
+{"time":"2025-02-18T23:23:47.74683302-05:00","level":"INFO","msg":"handler: started","stream_id":"nqn78pl1"}
+{"time":"2025-02-18T23:23:47.74683303-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"nqn78pl1"}
+{"time":"2025-02-18T23:23:47.869578298-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T23:26:24.86280628-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-18T23:26:24.86332667-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-18T23:26:25.225203957-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-18T23:26:25.338827555-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-02-18T23:26:26.342195818-05:00","level":"INFO","msg":"stream: closing","id":"nqn78pl1"}
+{"time":"2025-02-18T23:26:26.342208968-05:00","level":"INFO","msg":"handler: closed","stream_id":"nqn78pl1"}
+{"time":"2025-02-18T23:26:26.342214918-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"nqn78pl1"}
+{"time":"2025-02-18T23:26:26.342224708-05:00","level":"INFO","msg":"sender: closed","stream_id":"nqn78pl1"}
+{"time":"2025-02-18T23:26:26.343098919-05:00","level":"INFO","msg":"stream: closed","id":"nqn78pl1"}

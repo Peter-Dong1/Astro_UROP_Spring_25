@@ -1,0 +1,1 @@
+{"_step":69,"epoch":1701,"Reconstruction":{"sha256":"1328c7983d28e9d28c421ec276ddd5e55aaa8b52c333834277af9221f68c20e8","size":29635,"path":"media/images/Reconstruction_69_1328c7983d28e9d28c42.png","format":"png","width":800,"height":500,"_type":"image-file"},"_wandb":{"runtime":15},"train_loss":NaN,"val_loss":NaN,"_timestamp":1.7402581458330986e+09,"_runtime":15.06411687}

@@ -1,0 +1,48 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 148252253037.7143, Validation Loss: 11401154560.0000
+Epoch 100, Train Loss: nan, Validation Loss: nan
+Epoch 200, Train Loss: nan, Validation Loss: nan
+Epoch 300, Train Loss: nan, Validation Loss: nan
+Epoch 400, Train Loss: nan, Validation Loss: nan
+Epoch 500, Train Loss: nan, Validation Loss: nan
+Epoch 600, Train Loss: nan, Validation Loss: nan
+Epoch 700, Train Loss: nan, Validation Loss: nan
+Epoch 800, Train Loss: nan, Validation Loss: nan
+Epoch 900, Train Loss: nan, Validation Loss: nan
+Epoch 1000, Train Loss: nan, Validation Loss: nan
+Epoch 1100, Train Loss: nan, Validation Loss: nan
+Epoch 1200, Train Loss: nan, Validation Loss: nan
+Epoch 1300, Train Loss: nan, Validation Loss: nan
+Epoch 1400, Train Loss: nan, Validation Loss: nan
+Epoch 1500, Train Loss: nan, Validation Loss: nan
+Epoch 1600, Train Loss: nan, Validation Loss: nan
+Epoch 1700, Train Loss: nan, Validation Loss: nan
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 495, in <module>
+    x_hat, mu, logvar = model(x, lengths)
+                        ^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 242, in forward
+    pos_encoded_time = self.pos_encoder(time)
+                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 43, in forward
+    coded_t = t.repeat(1, 1, self.num_freqs * 2)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

@@ -1,0 +1,13 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trainmodelmulti.py", line 231, in <module>
+    print(len(light_curves_sample))
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: object of type 'zip' has no len()

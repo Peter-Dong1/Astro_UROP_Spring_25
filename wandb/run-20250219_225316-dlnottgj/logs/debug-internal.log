@@ -1,0 +1,7 @@
+{"time":"2025-02-19T22:53:16.356283725-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250219_225316-dlnottgj/logs/debug-core.log"}
+{"time":"2025-02-19T22:53:16.460454815-05:00","level":"INFO","msg":"created new stream","id":"dlnottgj"}
+{"time":"2025-02-19T22:53:16.460476235-05:00","level":"INFO","msg":"stream: started","id":"dlnottgj"}
+{"time":"2025-02-19T22:53:16.460485925-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"dlnottgj"}
+{"time":"2025-02-19T22:53:16.460492535-05:00","level":"INFO","msg":"sender: started","stream_id":"dlnottgj"}
+{"time":"2025-02-19T22:53:16.460503825-05:00","level":"INFO","msg":"handler: started","stream_id":"dlnottgj"}
+{"time":"2025-02-19T22:53:16.638801629-05:00","level":"INFO","msg":"Starting system monitor"}

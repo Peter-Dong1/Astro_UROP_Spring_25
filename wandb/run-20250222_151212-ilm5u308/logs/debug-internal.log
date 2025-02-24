@@ -1,0 +1,15 @@
+{"time":"2025-02-22T15:12:13.186875877-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250222_151212-ilm5u308/logs/debug-core.log"}
+{"time":"2025-02-22T15:12:13.294675581-05:00","level":"INFO","msg":"created new stream","id":"ilm5u308"}
+{"time":"2025-02-22T15:12:13.294694681-05:00","level":"INFO","msg":"stream: started","id":"ilm5u308"}
+{"time":"2025-02-22T15:12:13.294703031-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"ilm5u308"}
+{"time":"2025-02-22T15:12:13.294722941-05:00","level":"INFO","msg":"handler: started","stream_id":"ilm5u308"}
+{"time":"2025-02-22T15:12:13.294712341-05:00","level":"INFO","msg":"sender: started","stream_id":"ilm5u308"}
+{"time":"2025-02-22T15:12:13.51862262-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-22T15:12:54.454272098-05:00","level":"INFO","msg":"stream: closing","id":"ilm5u308"}
+{"time":"2025-02-22T15:12:54.454297498-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-22T15:12:54.454678089-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-22T15:12:54.789845315-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-22T15:12:54.891289706-05:00","level":"INFO","msg":"handler: closed","stream_id":"ilm5u308"}
+{"time":"2025-02-22T15:12:54.891310496-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ilm5u308"}
+{"time":"2025-02-22T15:12:54.891346476-05:00","level":"INFO","msg":"sender: closed","stream_id":"ilm5u308"}
+{"time":"2025-02-22T15:12:54.89241423-05:00","level":"INFO","msg":"stream: closed","id":"ilm5u308"}

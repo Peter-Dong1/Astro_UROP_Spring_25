@@ -1,0 +1,90 @@
+{
+  "os":  "Linux-4.18.0-372.9.1.el8.x86_64-x86_64-with-glibc2.28",
+  "python":  "CPython 3.11.11",
+  "startedAt":  "2025-02-22T21:24:50.022246Z",
+  "program":  "/orcd/home/002/pdong/Astro UROP/trans_model.py",
+  "codePath":  "trans_model.py",
+  "email":  "peterdong1951@gmail.com",
+  "root":  "/orcd/home/002/pdong/Astro UROP",
+  "host":  "node1806",
+  "executable":  "/home/pdong/.conda/envs/myenv/bin/python",
+  "codePathLocal":  "trans_model.py",
+  "cpu_count":  24,
+  "cpu_count_logical":  48,
+  "gpu":  "NVIDIA L4",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "784475906048",
+      "used":  "407185641472"
+    }
+  },
+  "memory":  {
+    "total":  "202096312320"
+  },
+  "cpu":  {
+    "count":  24,
+    "countLogical":  48
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA L4",
+      "memoryTotal":  "24152899584",
+      "cudaCores":  7424,
+      "architecture":  "Ada"
+    }
+  ],
+  "slurm":  {
+    "cluster_name":  "eofe7",
+    "conf":  "/etc/slurm/slurm.conf",
+    "cpus_on_node":  "4",
+    "gpus_on_node":  "1",
+    "gtids":  "0",
+    "job_account":  "mit_general",
+    "job_cpus_per_node":  "4",
+    "job_cpus_per_node_pack_group_0":  "4",
+    "job_gid":  "244657",
+    "job_gpus":  "0",
+    "job_id":  "63377324",
+    "job_name":  "interactive",
+    "job_nodelist":  "node1806",
+    "job_num_nodes":  "1",
+    "job_partition":  "mit_normal_gpu",
+    "job_qos":  "normal",
+    "job_uid":  "244657",
+    "job_user":  "pdong",
+    "jobid":  "63377324",
+    "launch_node_ipaddr":  "10.1.221.1",
+    "localid":  "0",
+    "mpi_type":  "none",
+    "nnodes":  "1",
+    "node_aliases":  "(null)",
+    "nodeid":  "0",
+    "nodelist":  "node1806",
+    "nprocs":  "4",
+    "ntasks":  "4",
+    "prio_process":  "0",
+    "procid":  "0",
+    "pty_port":  "45973",
+    "pty_win_col":  "99",
+    "pty_win_row":  "33",
+    "script_context":  "prolog_task",
+    "srun_comm_host":  "10.1.221.1",
+    "srun_comm_port":  "40185",
+    "step_id":  "4294967290",
+    "step_launcher_port":  "40185",
+    "step_nodelist":  "node1806",
+    "step_num_nodes":  "1",
+    "step_num_tasks":  "1",
+    "step_tasks_per_node":  "1",
+    "stepid":  "4294967290",
+    "submit_dir":  "/orcd/home/002/pdong/Astro UROP",
+    "submit_host":  "orcd-login001.mit.edu",
+    "task_pid":  "23127",
+    "tasks_per_node":  "4",
+    "topology_addr":  "node1806",
+    "topology_addr_pattern":  "node",
+    "working_cluster":  "eofe7:eofe-service003:6817:9728:101"
+  },
+  "cudaVersion":  "12.4"
+}

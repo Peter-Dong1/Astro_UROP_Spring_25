@@ -1,0 +1,20 @@
+{"time":"2025-02-19T09:43:05.560509684-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250219_094305-xw3icvqt/logs/debug-core.log"}
+{"time":"2025-02-19T09:43:05.665153927-05:00","level":"INFO","msg":"created new stream","id":"xw3icvqt"}
+{"time":"2025-02-19T09:43:05.665175157-05:00","level":"INFO","msg":"stream: started","id":"xw3icvqt"}
+{"time":"2025-02-19T09:43:05.665182617-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"xw3icvqt"}
+{"time":"2025-02-19T09:43:05.665189697-05:00","level":"INFO","msg":"handler: started","stream_id":"xw3icvqt"}
+{"time":"2025-02-19T09:43:05.665187687-05:00","level":"INFO","msg":"sender: started","stream_id":"xw3icvqt"}
+{"time":"2025-02-19T09:43:05.840371019-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-19T16:27:58.825153772-05:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+{"time":"2025-02-19T16:31:51.259735181-05:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/peterdong1951-massachusetts-institute-of-technology/allbands_16384_11k/xw3icvqt/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2025-02-19T16:33:06.090436731-05:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": context deadline exceeded"}
+{"time":"2025-02-19T16:53:38.822504118-05:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/peterdong1951-massachusetts-institute-of-technology/allbands_16384_11k/xw3icvqt/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2025-02-19T19:48:35.178781093-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-19T19:48:35.179298973-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-19T19:48:35.688721195-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-19T19:48:35.786064939-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-02-19T19:48:36.78928324-05:00","level":"INFO","msg":"stream: closing","id":"xw3icvqt"}
+{"time":"2025-02-19T19:48:36.78929655-05:00","level":"INFO","msg":"handler: closed","stream_id":"xw3icvqt"}
+{"time":"2025-02-19T19:48:36.78930661-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"xw3icvqt"}
+{"time":"2025-02-19T19:48:36.78931373-05:00","level":"INFO","msg":"sender: closed","stream_id":"xw3icvqt"}
+{"time":"2025-02-19T19:48:36.78989231-05:00","level":"INFO","msg":"stream: closed","id":"xw3icvqt"}

@@ -1,0 +1,1 @@
+{"_wandb":{"runtime":8402},"_timestamp":1.7397766804208586e+09,"_runtime":8236.49670289,"_step":99,"epoch":4901,"train_loss":0.027154430361492597,"Reconstruction":{"path":"media/images/Reconstruction_99_1955daf90f595e0e938f.png","format":"png","width":800,"height":500,"_type":"image-file","sha256":"1955daf90f595e0e938f6ab29f128cba1709f28b4832b169ba9cdc75174313e0","size":58968}}

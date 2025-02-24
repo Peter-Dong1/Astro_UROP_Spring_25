@@ -1,0 +1,15 @@
+{"time":"2025-02-22T16:06:57.225100365-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250222_160656-pbxp8go8/logs/debug-core.log"}
+{"time":"2025-02-22T16:06:57.329493137-05:00","level":"INFO","msg":"created new stream","id":"pbxp8go8"}
+{"time":"2025-02-22T16:06:57.329513857-05:00","level":"INFO","msg":"stream: started","id":"pbxp8go8"}
+{"time":"2025-02-22T16:06:57.329518807-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"pbxp8go8"}
+{"time":"2025-02-22T16:06:57.329528397-05:00","level":"INFO","msg":"sender: started","stream_id":"pbxp8go8"}
+{"time":"2025-02-22T16:06:57.329527397-05:00","level":"INFO","msg":"handler: started","stream_id":"pbxp8go8"}
+{"time":"2025-02-22T16:06:57.454823169-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-22T16:07:04.356716527-05:00","level":"INFO","msg":"stream: closing","id":"pbxp8go8"}
+{"time":"2025-02-22T16:07:04.356730257-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-22T16:07:04.357034598-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-22T16:07:04.668257658-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-22T16:07:04.801951351-05:00","level":"INFO","msg":"handler: closed","stream_id":"pbxp8go8"}
+{"time":"2025-02-22T16:07:04.801970631-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"pbxp8go8"}
+{"time":"2025-02-22T16:07:04.802006551-05:00","level":"INFO","msg":"sender: closed","stream_id":"pbxp8go8"}
+{"time":"2025-02-22T16:07:04.802817514-05:00","level":"INFO","msg":"stream: closed","id":"pbxp8go8"}

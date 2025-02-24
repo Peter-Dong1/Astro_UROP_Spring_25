@@ -1,0 +1,7 @@
+{"time":"2025-02-22T17:02:40.091333614-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250222_170239-us49nsh2/logs/debug-core.log"}
+{"time":"2025-02-22T17:02:40.234667352-05:00","level":"INFO","msg":"created new stream","id":"us49nsh2"}
+{"time":"2025-02-22T17:02:40.23473615-05:00","level":"INFO","msg":"stream: started","id":"us49nsh2"}
+{"time":"2025-02-22T17:02:40.234810182-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"us49nsh2"}
+{"time":"2025-02-22T17:02:40.234839307-05:00","level":"INFO","msg":"handler: started","stream_id":"us49nsh2"}
+{"time":"2025-02-22T17:02:40.234944503-05:00","level":"INFO","msg":"sender: started","stream_id":"us49nsh2"}
+{"time":"2025-02-22T17:02:40.433279763-05:00","level":"INFO","msg":"Starting system monitor"}

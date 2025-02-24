@@ -1,0 +1,15 @@
+{"time":"2025-02-22T15:56:09.672268028-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250222_155609-j55e3wpu/logs/debug-core.log"}
+{"time":"2025-02-22T15:56:09.77662617-05:00","level":"INFO","msg":"created new stream","id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:09.77664754-05:00","level":"INFO","msg":"stream: started","id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:09.776659041-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:09.776665311-05:00","level":"INFO","msg":"sender: started","stream_id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:09.776658991-05:00","level":"INFO","msg":"handler: started","stream_id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:09.907935432-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-22T15:56:11.828788222-05:00","level":"INFO","msg":"stream: closing","id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:11.828802203-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-22T15:56:11.829135294-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-22T15:56:12.175282625-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-22T15:56:12.296890431-05:00","level":"INFO","msg":"handler: closed","stream_id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:12.296920981-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:12.297172422-05:00","level":"INFO","msg":"sender: closed","stream_id":"j55e3wpu"}
+{"time":"2025-02-22T15:56:12.297584894-05:00","level":"INFO","msg":"stream: closed","id":"j55e3wpu"}

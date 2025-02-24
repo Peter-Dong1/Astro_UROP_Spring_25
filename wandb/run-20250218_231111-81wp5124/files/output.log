@@ -1,0 +1,23 @@
+hi
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+finished loading lcs
+10
+Beginning training...
+Epoch 1 | Train Loss: 11.02 | Valid Loss: 19.00
+Epoch 1001 | Train Loss: 0.06 | Valid Loss: 0.09
+Epoch 2001 | Train Loss: 0.08 | Valid Loss: 0.08
+Epoch 3001 | Train Loss: 0.06 | Valid Loss: 0.09
+Epoch 4001 | Train Loss: 0.05 | Valid Loss: 0.08
+Epoch 5001 | Train Loss: 0.04 | Valid Loss: 1.05
+Epoch 6001 | Train Loss: 0.05 | Valid Loss: 0.89
+Epoch 7001 | Train Loss: 0.04 | Valid Loss: 1.90
+Epoch 8001 | Train Loss: 0.05 | Valid Loss: 2.89
+Epoch 9001 | Train Loss: 0.04 | Valid Loss: 1.45
+Epoch 10001 | Train Loss: 0.05 | Valid Loss: 2.28
+Epoch 11001 | Train Loss: 0.04 | Valid Loss: 2.09

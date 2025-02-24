@@ -1,0 +1,16 @@
+{"time":"2025-02-18T23:31:27.863631897-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250218_233127-fde03rac/logs/debug-core.log"}
+{"time":"2025-02-18T23:31:27.96824835-05:00","level":"INFO","msg":"created new stream","id":"fde03rac"}
+{"time":"2025-02-18T23:31:27.96827001-05:00","level":"INFO","msg":"stream: started","id":"fde03rac"}
+{"time":"2025-02-18T23:31:27.96827626-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"fde03rac"}
+{"time":"2025-02-18T23:31:27.96828393-05:00","level":"INFO","msg":"sender: started","stream_id":"fde03rac"}
+{"time":"2025-02-18T23:31:27.96829453-05:00","level":"INFO","msg":"handler: started","stream_id":"fde03rac"}
+{"time":"2025-02-18T23:31:28.109709576-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T23:33:59.642374579-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-18T23:33:59.642928059-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-18T23:33:59.985889308-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-18T23:34:00.113116104-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-02-18T23:34:01.116376896-05:00","level":"INFO","msg":"stream: closing","id":"fde03rac"}
+{"time":"2025-02-18T23:34:01.116388806-05:00","level":"INFO","msg":"handler: closed","stream_id":"fde03rac"}
+{"time":"2025-02-18T23:34:01.116394726-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"fde03rac"}
+{"time":"2025-02-18T23:34:01.116404656-05:00","level":"INFO","msg":"sender: closed","stream_id":"fde03rac"}
+{"time":"2025-02-18T23:34:01.116977806-05:00","level":"INFO","msg":"stream: closed","id":"fde03rac"}

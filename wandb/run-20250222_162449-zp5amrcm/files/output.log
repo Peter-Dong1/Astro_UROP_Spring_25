@@ -1,0 +1,35 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 453, in <module>
+    lc_low, lc_med, lc_high = load_n_light_curves(4096, fits_files, band="all")
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 158, in load_n_light_curves
+    light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 158, in <listcomp>
+    light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 158, in <genexpr>
+    light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/orcd/home/002/pdong/Astro UROP/helper.py", line 91, in load_light_curve
+    with fits.open(file_path) as hdul:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/hdu/hdulist.py", line 223, in fitsopen
+    return HDUList.fromfile(
+           ^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/hdu/hdulist.py", line 487, in fromfile
+    return cls._readfrom(
+           ^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/hdu/hdulist.py", line 1169, in _readfrom
+    fileobj = _File(
+              ^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/file.py", line 218, in __init__
+    self._open_filename(fileobj, mode, overwrite)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/astropy/io/fits/file.py", line 644, in _open_filename
+    magic = f.read(4)
+            ^^^^^^^^^
+KeyboardInterrupt

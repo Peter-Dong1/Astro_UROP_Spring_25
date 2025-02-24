@@ -1,0 +1,78 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+Loaded 10 light curves
+/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:502: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647429097/work/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Epoch 0, Train Loss: 22962.7054, Validation Loss: 9867.1953
+Epoch 100, Train Loss: 1520.4523, Validation Loss: 220.6404
+Epoch 200, Train Loss: 1216.1802, Validation Loss: 203.2216
+Epoch 300, Train Loss: 1284.0515, Validation Loss: 202.7486
+Epoch 400, Train Loss: 1134.7482, Validation Loss: 202.0693
+Epoch 500, Train Loss: 1207.5889, Validation Loss: 201.5226
+Epoch 600, Train Loss: 1242.9576, Validation Loss: 201.1073
+Epoch 700, Train Loss: 1237.3989, Validation Loss: 200.9522
+Epoch 800, Train Loss: 1140.4600, Validation Loss: 200.1627
+Epoch 900, Train Loss: 1246.6200, Validation Loss: 199.7615
+Epoch 1000, Train Loss: 1289.5151, Validation Loss: 199.2109
+Traceback (most recent call last):
+  File "/orcd/home/002/pdong/Astro UROP/trans_model.py", line 540, in <module>
+    wandb.log({"Reconstruction": wandb.Image(fig)})
+                                 ^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 179, in __init__
+    self._initialize_from_data(data_or_path, mode, file_type)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/wandb/sdk/data_types/image.py", line 302, in _initialize_from_data
+    util.ensure_matplotlib_figure(data).savefig(buf, format="png")
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/figure.py", line 3490, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backend_bases.py", line 2184, in print_figure
+    result = print_method(
+             ^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backend_bases.py", line 2040, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+                                                                 ^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 481, in print_png
+    self._print_pil(filename_or_obj, "png", pil_kwargs, metadata)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 429, in _print_pil
+    FigureCanvasAgg.draw(self)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 382, in draw
+    self.figure.draw(self.renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 94, in draw_wrapper
+    result = draw(artist, renderer, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/figure.py", line 3257, in draw
+    mimage._draw_list_compositing_images(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/image.py", line 134, in _draw_list_compositing_images
+    a.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/axes/_base.py", line 3181, in draw
+    mimage._draw_list_compositing_images(
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/image.py", line 134, in _draw_list_compositing_images
+    a.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/axis.py", line 1419, in draw
+    tick.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/axis.py", line 276, in draw
+    artist.draw(renderer)
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/text.py", line 808, in draw
+    textrenderer.draw_text(gc, x, y, clean_line,
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 189, in draw_text
+    font = self._prepare_font(prop)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/matplotlib/backends/backend_agg.py", line 253, in _prepare_font
+    font.clear()
+KeyboardInterrupt

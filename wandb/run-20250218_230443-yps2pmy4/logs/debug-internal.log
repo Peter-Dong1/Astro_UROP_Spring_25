@@ -1,0 +1,15 @@
+{"time":"2025-02-18T23:04:43.277877995-05:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/orcd/home/002/pdong/Astro UROP/wandb/run-20250218_230443-yps2pmy4/logs/debug-core.log"}
+{"time":"2025-02-18T23:04:43.382416029-05:00","level":"INFO","msg":"created new stream","id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:43.382438009-05:00","level":"INFO","msg":"stream: started","id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:43.382444239-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:43.382453809-05:00","level":"INFO","msg":"handler: started","stream_id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:43.382453689-05:00","level":"INFO","msg":"sender: started","stream_id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:43.570866627-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T23:04:45.404718544-05:00","level":"INFO","msg":"stream: closing","id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:45.404732504-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-18T23:04:45.405060054-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-18T23:04:45.748313464-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-18T23:04:45.859021154-05:00","level":"INFO","msg":"handler: closed","stream_id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:45.859051754-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:45.859078034-05:00","level":"INFO","msg":"sender: closed","stream_id":"yps2pmy4"}
+{"time":"2025-02-18T23:04:45.859659895-05:00","level":"INFO","msg":"stream: closed","id":"yps2pmy4"}
