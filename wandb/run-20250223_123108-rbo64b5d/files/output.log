@@ -31,3 +31,13 @@ Epoch 2200, Train Loss: 58.5031, Validation Loss: 659.5306
 Epoch 2300, Train Loss: 69.4592, Validation Loss: 687.5941
 Epoch 2400, Train Loss: 56.4409, Validation Loss: 718.1748
 Epoch 2500, Train Loss: 47.3150, Validation Loss: 748.7459
+Epoch 2600, Train Loss: 52.1882, Validation Loss: 780.1967
+Epoch 2700, Train Loss: 61.0223, Validation Loss: 814.5348
+Epoch 2800, Train Loss: 43.6722, Validation Loss: 851.9977
+Epoch 2900, Train Loss: 41.7641, Validation Loss: 890.8504
+Epoch 3000, Train Loss: 43.8789, Validation Loss: 932.6556
+Epoch 3100, Train Loss: 41.6839, Validation Loss: 973.8986
+Epoch 3200, Train Loss: 49.5208, Validation Loss: 1018.3676
+Epoch 3300, Train Loss: 39.2359, Validation Loss: 1066.5085
+Epoch 3400, Train Loss: 47.3770, Validation Loss: 1115.1677
+Computing final losses and generating plots...

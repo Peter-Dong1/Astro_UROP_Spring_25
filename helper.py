@@ -89,8 +89,8 @@ def load_light_curve(file_path, band=1, trunc=20):
         pd.DataFrame or None: DataFrame with light curve data, or None if file is skipped.
     """
     with fits.open(file_path) as hdul:
-        data = hdul[1].data  # Assuming light curve data is in the second HDU
         try:
+            data = hdul[1].data  # Assuming light curve data is in the second HDU
             light_curve = pd.DataFrame({
                 'TIME': data['TIME'],
                 'TIMEDEL': data['TIMEDEL'],
@@ -155,13 +155,28 @@ def load_n_light_curves(n, fits_files, band='all'):
 
     # Load all bands of the light curves into a list of DataFrames
     if band == 'all':
+        print('starting 1st band')
         light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+        print('starting 2nd band')
         light_curves_2 = [df for df in (load_light_curve(file, band = 1) for file in fits_files) if df is not None]
+        print('starting 3rd band')
         light_curves_3 = [df for df in (load_light_curve(file, band = 2) for file in fits_files) if df is not None]
+        print('finished loading all bands')
 
         return light_curves_1, light_curves_2, light_curves_3
     elif band == 'low':
-        light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+        total_files = len(fits_files)
+        tenths = total_files // 10
+
+        light_curves_1 = []
+        for i, file in enumerate(fits_files):
+            df = load_light_curve(file, band=0)
+            if df is not None:
+                light_curves_3.append(df)
+            if total_files > 10:
+                if (i + 1) % tenths == 0:
+                    print(f"Processed {(i + 1) / total_files:.0%} of files")
+
         return light_curves_1
     elif band == 'med':
         total_files = len(fits_files)
@@ -178,13 +193,105 @@ def load_n_light_curves(n, fits_files, band='all'):
 
         return light_curves_2
     elif band == 'high':
-        light_curves_3 = [df for df in (load_light_curve(file, band = 2) for file in fits_files) if df is not None]
+        total_files = len(fits_files)
+        tenths = total_files // 10
+
+        light_curves_3 = []
+        for i, file in enumerate(fits_files):
+            df = load_light_curve(file, band=2)
+            if df is not None:
+                light_curves_3.append(df)
+            if total_files > 10:
+                if (i + 1) % tenths == 0:
+                    print(f"Processed {(i + 1) / total_files:.0%} of files")
+
         return light_curves_3
     else:
         raise KeyError("Input for Band is not valid")
+
+def check_lightcurve_permissions(data_dir = '/pool001/rarcodia/eROSITA_public/data/eRASS1_lc_rebinned'):
+    """
+    Check permissions for all light curve files in the given directory and save inaccessible ones to a file
+    in the same directory as this script. Also checks to make sure that the light curves are not empty
+
+    Args:
+        data_dir (str): Path to the directory containing light curve files
+
+    Returns:
+        List[str]: List of files that could not be accessed
+    """
+    inaccessible_files = []
+
+    # Check if the data directory exists and is accessible
+    if not os.path.exists(data_dir):
+        raise FileNotFoundError(f"Directory {data_dir} does not exist")
+
+    if not os.access(data_dir, os.R_OK):
+        raise PermissionError(f"No read permission for directory {data_dir}")
+
+    # Get all FITS files in the directory
+    fits_files = glob.glob(os.path.join(data_dir, "*.fits"))
+
+    # Check each file for read permission
+
+    for file_path in fits_files:
+        if not os.access(file_path, os.R_OK): # read Permission
+            inaccessible_files.append(file_path)
+            continue
+        with fits.open(file_path) as hdul:
+            try:
+                data = hdul[1].data
+                if data is None or len(data) == 0:
+                    inaccessible_files.append(file_path)
+            except KeyError:
+                print(f"Skipping file {file_path}: some key not found")
+                inaccessible_files.append(file_path)
+
+
+    # Save inaccessible files to a text file in script directory
+    output_file = os.path.join(os.getcwd(), "inaccessible_lightcurves.txt")
+    with open(output_file, "w") as f:
+        for file_path in inaccessible_files:
+            f.write(f"{file_path}\n")
+
+    print(f"Saved inaccessible files list to: {output_file}")
+    return inaccessible_files
+
+# Partition into train set and test set
+def partition_data(light_curves, test_size=0.2, val_size=0.1, random_seed=42):
+    """
+    Partition a list of light curves into train, validation, and test sets.
+
+    Parameters:
+        light_curves (list): List of light curve DataFrames.
+        test_size (float): Proportion of data to use for the test set.
+        val_size (float): Proportion of train data to use for the validation set.
+        random_seed (int): Random seed for reproducibility.
+
+    Returns:
+        train_set (list): List of light curves for training.
+        val_set (list): List of light curves for validation (if val_size > 0).
+        test_set (list): List of light curves for testing.
+    """
+    # Set random seed for reproducibility
+    random.seed(random_seed)
+
+    # Split into train+val and test sets
+    train_val_set, test_set = train_test_split(light_curves, test_size=test_size, random_state=random_seed)
+
+    if val_size > 0:
+        # Split train_val into train and validation sets
+        train_size = 1 - val_size
+        train_set, val_set = train_test_split(train_val_set, test_size=val_size, random_state=random_seed)
+        return train_set, val_set, test_set
+    else:
+        # If no validation set is needed, return only train and test sets
+        return train_val_set, test_set
 
 # Only run this if the script is run directly (not imported)
 if __name__ == '__main__':
     # Example usage of the functions
     fits_files = load_all_fits_files()
     print(f"Found {len(fits_files)} FITS files")
+
+    check_lightcurve_permissions()

@@ -15,7 +15,7 @@ from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import IsolationForest
 from sklearn.decomposition import PCA
-from helper import load_light_curve, load_n_light_curves, load_all_fits_files
+from helper import load_light_curve, load_n_light_curves, load_all_fits_files, partition_data
 
 # set the device we're using for training.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -210,37 +210,6 @@ class RNN_VAE(torch.nn.Module): # TODO: Print out shapes of the things
 
         return x_hat, mu, logvar
 
-# Partition into train set and test set
-def partition_data(light_curves, test_size=0.2, val_size=0.1, random_seed=42):
-    """
-    Partition a list of light curves into train, validation, and test sets.
-
-    Parameters:
-        light_curves (list): List of light curve DataFrames.
-        test_size (float): Proportion of data to use for the test set.
-        val_size (float): Proportion of train data to use for the validation set.
-        random_seed (int): Random seed for reproducibility.
-
-    Returns:
-        train_set (list): List of light curves for training.
-        val_set (list): List of light curves for validation (if val_size > 0).
-        test_set (list): List of light curves for testing.
-    """
-    # Set random seed for reproducibility
-    random.seed(random_seed)
-
-    # Split into train+val and test sets
-    train_val_set, test_set = train_test_split(light_curves, test_size=test_size, random_state=random_seed)
-
-    if val_size > 0:
-        # Split train_val into train and validation sets
-        train_size = 1 - val_size
-        train_set, val_set = train_test_split(train_val_set, test_size=val_size, random_state=random_seed)
-        return train_set, val_set, test_set
-    else:
-        # If no validation set is needed, return only train and test sets
-        return train_val_set, test_set
-
 # Set up DataLoader
 def collate_fn_err(batch):
     rate_low = [torch.tensor(lc[0]['RATE'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
@@ -281,11 +250,11 @@ test_loader = DataLoader(test_dataset, batch_size=32, collate_fn=collate_fn_err,
 
 print('finish loading lcs')
 
-model = RNN_VAE(input_size=9, hidden_size=512, latent_size=40, output_size=1).to(device)
-model_str = 'more_bands_test2'
+model = RNN_VAE(input_size=9, hidden_size=512, latent_size=22, output_size=1).to(device)
+model_str = 'RNN_Large_3bands'
 model.load_state_dict(torch.load('./models/' + model_str + '.h5'))
 
-plot_dir = "/home/pdong/Astro UROP/plots/" + model_str
+plot_dir = "/home/pdong/Astro UROP/plots/" + model_str + "_test_large"
 # Ensure the directory exists
 os.makedirs(plot_dir, exist_ok=True)
 
@@ -427,8 +396,9 @@ latent_vectors = np.vstack(latent_vectors)
 
 # Apply PCA
 print("Applying PCA...")
-pca = PCA(n_components=2)
-latent_2d_pca = pca.fit_transform(latent_vectors)
+pca = PCA(n_components=6)
+latent_pca = pca.fit_transform(latent_vectors)
+latent_2d_pca = latent_pca[:, :2]  # Keep only the first two components
 
 # Apply t-SNE
 print("Applying t-SNE...")
@@ -463,12 +433,8 @@ import hdbscan
 # Cluster using PCA representation
 print("Clustering PCA representation...")
 hdbscan_pca = hdbscan.HDBSCAN(min_cluster_size=50, min_samples=5)
-cluster_labels_pca = hdbscan_pca.fit_predict(latent_2d_pca)
+cluster_labels_pca = hdbscan_pca.fit_predict(latent_pca)
 
-# Cluster using t-SNE representation
-print("Clustering t-SNE representation...")
-hdbscan_tsne = hdbscan.HDBSCAN(min_cluster_size=50, min_samples=5)
-cluster_labels_tsne = hdbscan_tsne.fit_predict(latent_2d_tsne)
 
 # Plot clustered PCA results
 plt.figure(figsize=(12, 8))
@@ -481,16 +447,6 @@ plt.ylabel('Second Principal Component')
 plt.savefig(os.path.join(plot_dir, f"hdbscan_pca_{model_str}.png"))
 plt.close()
 
-# Plot clustered t-SNE results
-plt.figure(figsize=(12, 8))
-scatter = plt.scatter(latent_2d_tsne[:, 0], latent_2d_tsne[:, 1],
-                     c=cluster_labels_tsne, cmap='viridis', alpha=0.6)
-plt.colorbar(scatter, label='Cluster')
-plt.title('HDBSCAN Clustering on t-SNE Representation')
-plt.xlabel('t-SNE Component 1')
-plt.ylabel('t-SNE Component 2')
-plt.savefig(os.path.join(plot_dir, f"hdbscan_tsne_{model_str}.png"))
-plt.close()
 
 # Print clustering statistics
 print("\nClustering Statistics:")
@@ -498,6 +454,155 @@ print("PCA-based clustering:")
 print(f"Number of clusters: {len(set(cluster_labels_pca)) - (1 if -1 in cluster_labels_pca else 0)}")
 print(f"Number of noise points: {sum(1 for label in cluster_labels_pca if label == -1)}")
 
-print("\nt-SNE-based clustering:")
-print(f"Number of clusters: {len(set(cluster_labels_tsne)) - (1 if -1 in cluster_labels_tsne else 0)}")
-print(f"Number of noise points: {sum(1 for label in cluster_labels_tsne if label == -1)}")
+
+def plot_cluster_representatives(model, test_loader, cluster_labels, analysis_type, plot_dir):
+    """Plot representative light curves from each cluster.
+
+    Args:
+        model: The trained VAE model
+        test_loader: DataLoader containing the test data
+        cluster_labels: Array of cluster labels
+        analysis_type: String indicating the type of analysis ('PCA' or 't-SNE')
+        plot_dir: Base directory for saving plots
+    """
+    # Create directory for this analysis type
+    cluster_plot_dir = os.path.join(plot_dir, f"{analysis_type}_cluster_representatives")
+    os.makedirs(cluster_plot_dir, exist_ok=True)
+
+    # Get unique cluster labels (excluding noise points labeled as -1)
+    unique_clusters = sorted(list(set(cluster_labels)))
+    if -1 in unique_clusters:
+        unique_clusters.remove(-1)
+
+    # Store all data for easier access
+    all_data = []
+    with torch.no_grad():
+        for x, lengths in test_loader:
+            all_data.extend([(x[i], lengths[i]) for i in range(len(lengths))])
+
+    # Plot representatives for each cluster
+    for cluster in unique_clusters:
+        # Get indices of samples in this cluster
+        cluster_indices = np.where(cluster_labels == cluster)[0]
+
+        # Select 5 random samples from this cluster
+        sample_indices = np.random.choice(cluster_indices, min(10, len(cluster_indices)), replace=False)
+
+        # Create plot
+        fig, axes = plt.subplots(1, round(len(sample_indices)), figsize=(20, 4))
+        if len(sample_indices) == 1:
+            axes = [axes]
+
+        for idx, (ax, sample_idx) in enumerate(zip(axes, sample_indices)):
+            # Get the data for this sample
+            x, length = all_data[sample_idx]
+            x = x.unsqueeze(0).to(device)  # Add batch dimension
+            length = torch.tensor([length])
+
+            # Get reconstruction
+            x_hat, _, _ = model(x, length)
+
+            # Plot original and reconstructed
+            original = x[0, :length, 0].cpu().numpy()
+            reconstructed = x_hat[0, :length, 0].cpu().detach().numpy()
+
+            ax.plot(original, label='Original', alpha=0.7)
+            ax.plot(reconstructed, label='Reconstructed', alpha=0.7)
+            ax.set_title(f'Sample {idx+1}')
+            ax.legend()
+
+        plt.suptitle(f'Cluster {cluster} Representatives')
+        plt.tight_layout()
+        plt.savefig(os.path.join(cluster_plot_dir, f"cluster_{cluster}_representatives.png"))
+        plt.close()
+
+# Plot representative light curves for PCA-based clustering
+print("\nPlotting PCA cluster representatives...")
+plot_cluster_representatives(model, test_loader, cluster_labels_pca, 'PCA', plot_dir)
+
+# Apply Isolation Forest for outlier detection
+print("\nApplying Isolation Forest for outlier detection...")
+isolation_forest = IsolationForest(contamination=0.1, random_state=42)
+outlier_labels = isolation_forest.fit_predict(latent_vectors)
+
+# Convert predictions to boolean mask (True for inliers, False for outliers)
+is_inlier = outlier_labels == 1
+
+# Plot PCA visualization with outliers highlighted
+plt.figure(figsize=(12, 8))
+plt.scatter(latent_2d_pca[is_inlier, 0], latent_2d_pca[is_inlier, 1],
+            c='blue', alpha=0.5, label='Normal')
+plt.scatter(latent_2d_pca[~is_inlier, 0], latent_2d_pca[~is_inlier, 1],
+            c='red', alpha=0.7, label='Outlier')
+plt.title('PCA Visualization with Isolation Forest Outliers')
+plt.xlabel('First Principal Component')
+plt.ylabel('Second Principal Component')
+plt.legend()
+plt.savefig(os.path.join(plot_dir, f"isolation_forest_pca_{model_str}.png"))
+plt.close()
+
+# Plot t-SNE visualization with outliers highlighted
+plt.figure(figsize=(12, 8))
+plt.scatter(latent_2d_tsne[is_inlier, 0], latent_2d_tsne[is_inlier, 1],
+            c='blue', alpha=0.5, label='Normal')
+plt.scatter(latent_2d_tsne[~is_inlier, 0], latent_2d_tsne[~is_inlier, 1],
+            c='red', alpha=0.7, label='Outlier')
+plt.title('t-SNE Visualization with Isolation Forest Outliers')
+plt.xlabel('t-SNE Component 1')
+plt.ylabel('t-SNE Component 2')
+plt.legend()
+plt.savefig(os.path.join(plot_dir, f"isolation_forest_tsne_{model_str}.png"))
+plt.close()
+
+# Print outlier detection statistics
+print("\nIsolation Forest Statistics:")
+print(f"Number of normal samples: {sum(is_inlier)}")
+print(f"Number of outliers: {sum(~is_inlier)}")
+print(f"Outlier percentage: {(sum(~is_inlier) / len(is_inlier)) * 100:.2f}%")
+
+# Plot representative outlier light curves
+print("\nPlotting representative outlier light curves...")
+
+# Get indices of outlier samples
+outlier_indices = np.where(~is_inlier)[0]
+
+# Select up to 15 random outlier samples
+num_samples = min(15, len(outlier_indices))
+sample_indices = np.random.choice(outlier_indices, num_samples, replace=False)
+
+# Create plot
+fig, axes = plt.subplots(3, 5, figsize=(20, 12))
+axes = axes.ravel()
+
+# Store all data for easier access
+all_data = []
+with torch.no_grad():
+    for x, lengths in test_loader:
+        all_data.extend([(x[i], lengths[i]) for i in range(len(lengths))])
+
+for idx, (ax, sample_idx) in enumerate(zip(axes, sample_indices)):
+    # Get the data for this sample
+    x, length = all_data[sample_idx]
+    x = x.unsqueeze(0).to(device)  # Add batch dimension
+    length = torch.tensor([length])
+
+    # Get reconstruction
+    x_hat, _, _ = model(x, length)
+
+    # Plot original and reconstructed
+    original = x[0, :length, 0].cpu().numpy()
+    reconstructed = x_hat[0, :length, 0].cpu().detach().numpy()
+
+    ax.plot(original, label='Original', alpha=0.7)
+    ax.plot(reconstructed, label='Reconstructed', alpha=0.7)
+    ax.set_title(f'Outlier {idx+1}')
+    ax.legend()
+
+# Hide empty subplots if any
+for idx in range(len(sample_indices), len(axes)):
+    axes[idx].axis('off')
+
+plt.suptitle('Representative Outlier Light Curves')
+plt.tight_layout()
+plt.savefig(os.path.join(plot_dir, f"outlier_representatives_{model_str}.png"))
+plt.close()

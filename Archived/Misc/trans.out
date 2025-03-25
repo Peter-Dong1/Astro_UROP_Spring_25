@@ -1,0 +1,26 @@
+Using device: cuda
+CUDA available: True
+Loading light curves...
+finished getting all files
+starting 1st band
+starting 2nd band
+starting 3rd band
+finished loading all bands
+Loaded 99946 light curves
+Epoch 0, Train Loss: 452.6429, Validation Loss: 590.6207
+Epoch 100, Train Loss: 5.5362, Validation Loss: 230.5874
+Epoch 200, Train Loss: 6.3359, Validation Loss: 232.6619
+Epoch 300, Train Loss: 6.3106, Validation Loss: 238.5861
+Epoch 400, Train Loss: 5.0484, Validation Loss: 249.1150
+Epoch 500, Train Loss: 4.8012, Validation Loss: 254.9115
+Epoch 600, Train Loss: 5.3187, Validation Loss: 263.1071
+Epoch 700, Train Loss: 4.8971, Validation Loss: 269.7062
+Epoch 800, Train Loss: 4.5885, Validation Loss: 275.7359
+Epoch 900, Train Loss: 4.0601, Validation Loss: 275.9566
+Epoch 1000, Train Loss: 5.0055, Validation Loss: 283.6094
+Epoch 1100, Train Loss: 5.0234, Validation Loss: 296.2537
+Epoch 1200, Train Loss: 4.3086, Validation Loss: 290.1291
+Epoch 1300, Train Loss: 4.6979, Validation Loss: 296.3866
+Epoch 1400, Train Loss: 4.3963, Validation Loss: 299.0886
+Computing final losses and generating plots...
+Training completed. Model at ./modelstrans_100k_1500 saved and evaluation plots generated at ./plots/trans_100k_1500trans_100k_1500.

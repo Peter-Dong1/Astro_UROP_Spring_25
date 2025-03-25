@@ -8,7 +8,7 @@ from torch.nn import functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
-from helper import load_light_curve, load_n_light_curves, load_all_fits_files
+from helper import load_light_curve, load_n_light_curves, load_all_fits_files, partition_data
 
 import wandb
 
@@ -324,19 +324,6 @@ class TransformerVAE(nn.Module):
         #     decoded = decoded.unsqueeze(1).expand(-1, seq_len, -1)
         return decoded
 
-# Data loading and processing functions
-def partition_data(light_curves, test_size=0.2, val_size=0.1, random_seed=42):
-    """Partition light curves into train, validation, and test sets."""
-    random.seed(random_seed)
-    train_val_set, test_set = train_test_split(light_curves, test_size=test_size, random_state=random_seed)
-
-    if val_size > 0:
-        train_size = 1 - val_size
-        train_set, val_set = train_test_split(train_val_set, test_size=val_size, random_state=random_seed)
-        return train_set, val_set, test_set
-    else:
-        return train_val_set, test_set
-
 def collate_fn_err(batch):
     """Collate function for DataLoader that handles errors."""
 
@@ -425,18 +412,18 @@ def compute_losses(model, test_loader):
 if __name__ == '__main__':
     # Initialize wandb
     wandb.init(
-        project="transformer_vae_testing",
+        project="transformer_vae_large2",
         config={
             "learning_rate": 1e-5,
             "architecture": "TransformerVAE",
             "dataset": "3 LCs",
-            "epochs": 20000,
+            "epochs": 10000,
             "latent_size": 40,
             "d_model": 256,
-            "nhead": 8,
-            "num_encoder_layers": 6,
-            "hidden_size": 512,
-            "num_decoder_blocks": 4,
+            "nhead": 3,
+            "num_encoder_layers": 2,
+            "hidden_size": 256,
+            "num_decoder_blocks": 3,
             "dropout": 0.1
         }
     )
@@ -450,7 +437,8 @@ if __name__ == '__main__':
     print('Loading light curves...')
     fits_files = load_all_fits_files()
     print('finished getting all files')
-    lc_low, lc_med, lc_high = load_n_light_curves(10, fits_files, band="all")
+    lc_low, lc_med, lc_high = load_n_light_curves(100000, fits_files, band="all")
+    # lc_low, lc_med, lc_high = load_n_light_curves(10, fits_files, band="all")
     light_curves_sample = list(zip(lc_low, lc_med, lc_high))
     print(f'Loaded {len(light_curves_sample)} light curves')
 
@@ -475,13 +463,14 @@ if __name__ == '__main__':
     ).to(device)
 
     # Training parameters
-    num_epochs = 20000
+    num_epochs = 1500
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
 
     # Create directories for saving
+    model_str = 'trans_100k_1500'
     model_dir = "./models"
-    plot_dir = "./plots/transformer"
+    plot_dir = "./plots/" + model_str
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(plot_dir, exist_ok=True)
 
@@ -560,7 +549,7 @@ if __name__ == '__main__':
         # Save best model
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), os.path.join(model_dir, 'transformer_vae_best.pt'))
+            torch.save(model.state_dict(), os.path.join(model_dir, model_str + '.h5'))
 
     # Final evaluation
     print('Computing final losses and generating plots...')
@@ -579,4 +568,4 @@ if __name__ == '__main__':
 
     # Finish wandb run
     wandb.finish()
-    print('Training completed. Model saved and evaluation plots generated.')
+    print(f'Training completed. Model at {model_dir + model_str} saved and evaluation plots generated at {plot_dir + model_str}.')

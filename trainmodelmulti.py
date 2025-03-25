@@ -15,21 +15,22 @@ from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import IsolationForest
 from sklearn.decomposition import PCA
-from helper import load_light_curve, load_n_light_curves, load_all_fits_files
+from helper import load_light_curve, load_n_light_curves, load_all_fits_files, partition_data
 
 import wandb
 
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="trainmodelerror",
+    project="RNN_Latent_Test",
 
     # track hyperparameters and run metadata
     config={
     "learning_rate": 1e-5,
     "architecture": "VAE",
     "dataset": "3 LCs",
-    "epochs": 50000,
+    "epochs": 2000,
+    "files": 10000
     }
 )
 
@@ -224,42 +225,14 @@ print('start to load light curves')
 fits_files = load_all_fits_files()
 print('loaded files')
 
-lc_low, lc_med, lc_high = load_n_light_curves(10, fits_files, band = "all")
+lc_low, lc_med, lc_high = load_n_light_curves(70000, fits_files, band = "all")
 
 light_curves_sample = list(zip(lc_low, lc_med, lc_high))
 print('finished loading lcs')
 print(len(light_curves_sample))
 
 # Partition into train set and test set
-def partition_data(light_curves, test_size=0.2, val_size=0.1, random_seed=42):
-    """
-    Partition a list of light curves into train, validation, and test sets.
 
-    Parameters:
-        light_curves (list): List of light curve DataFrames.
-        test_size (float): Proportion of data to use for the test set.
-        val_size (float): Proportion of train data to use for the validation set.
-        random_seed (int): Random seed for reproducibility.
-
-    Returns:
-        train_set (list): List of light curves for training.
-        val_set (list): List of light curves for validation (if val_size > 0).
-        test_set (list): List of light curves for testing.
-    """
-    # Set random seed for reproducibility
-    random.seed(random_seed)
-
-    # Split into train+val and test sets
-    train_val_set, test_set = train_test_split(light_curves, test_size=test_size, random_state=random_seed)
-
-    if val_size > 0:
-        # Split train_val into train and validation sets
-        train_size = 1 - val_size
-        train_set, val_set = train_test_split(train_val_set, test_size=val_size, random_state=random_seed)
-        return train_set, val_set, test_set
-    else:
-        # If no validation set is needed, return only train and test sets
-        return train_val_set, test_set
 train_dataset, val_dataset, test_dataset = partition_data(light_curves_sample)
 # train_dataset = light_curves_sample
 
@@ -306,11 +279,11 @@ val_loader = DataLoader(val_dataset, batch_size=32, collate_fn=collate_fn_err_mu
 
 
 # Initialize the model and optimizer
-model = RNN_VAE(input_size=9, hidden_size=512, latent_size=22, output_size=1).to(device)
+model = RNN_VAE(input_size=9, hidden_size=512, latent_size=36, output_size=1).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
 # Number of epochs
-nepochs = 60000
+nepochs = 3000
 
 # Initialize lists to store training and validation losses
 validation_losses = []
@@ -415,12 +388,17 @@ for epoch in range(nepochs):
         x_hat_benchmark_rate = x_hat_benchmark[..., 0].detach().cpu().numpy()  # Detach before converting to numpy
         benchmark_reconstructions.append((epoch + 1, x_hat_benchmark_rate[0]))
 
-save_dir = "/home/pdong/Astro UROP/models"
+model_str = 'RNN_36_Latent'
+model_dir = "/home/pdong/Astro UROP/models"
+plot_dir = "/home/pdong/Astro UROP/plots/" + model_str
+os.makedirs(model_dir, exist_ok=True)
+os.makedirs(plot_dir, exist_ok=True)
+
 # Ensure the directory exists
-os.makedirs(save_dir, exist_ok=True)
+os.makedirs(model_dir, exist_ok=True)
 # Save the model
-torch.save(model.state_dict(), os.path.join(save_dir, 'RNN_VAE_Err.h5'))
-print(f'Saved Model at {os.path.join(save_dir, "RNN_VAE_Err.h5")}')
+torch.save(model.state_dict(), os.path.join(model_dir, model_str + '.h5'))
+print(f'Saved Model at {os.path.join(model_dir, model_str + ".h5")}')
 
 
 model.eval()
@@ -448,7 +426,7 @@ with torch.no_grad():
         axes[i].set_xlim(0, max_length)  # Set uniform x-axis limits
 
     plt.tight_layout()
-    plt.savefig('errorplot.png')
+    plt.savefig(os.path.join(plot_dir,'errorplot.png'))
     plt.show()
 
 # Plot the benchmark curve reconstruction at different epochs
@@ -459,11 +437,11 @@ plt.legend()
 plt.title('Benchmark Curve Reconstruction at Different Epochs')
 plt.xlabel('Time')
 plt.ylabel('Rate')
-plt.savefig('benchmark_reconstruction.png')
+plt.savefig(os.path.join(plot_dir,'benchmark_reconstruction.png'))
 plt.show()
 
 
-filename = "loss.txt"
+filename = os.path.join(plot_dir,"loss.txt")
 with open(filename, "w") as file:
     for value in training_losses:
         file.write(f"{value}\n")
@@ -478,7 +456,7 @@ plt.title("Line Plot of Losses")
 plt.legend()
 plt.grid(True)
 plt.show()
-plt.savefig('loss.png')
+plt.savefig(os.path.join(plot_dir,'loss.png'))
 
 wandb.finish()
 

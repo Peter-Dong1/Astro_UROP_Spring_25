@@ -20,3 +20,10 @@ config: {'learning_rate': 1e-05, 'architecture': 'TransformerVAE', 'dataset': '3
 2025-02-23 12:31:09,146 INFO    MainThread:31866 [wandb_run.py:_redirect():2300] Wrapping output streams.
 2025-02-23 12:31:09,146 INFO    MainThread:31866 [wandb_run.py:_redirect():2325] Redirects installed.
 2025-02-23 12:31:09,151 INFO    MainThread:31866 [wandb_init.py:init():1036] run started, returning control to user process
+2025-02-23 23:21:41,518 INFO    MainThread:31866 [wandb_run.py:_finish():2110] finishing run peterdong1951-massachusetts-institute-of-technology/transformer_vae_large/rbo64b5d
+2025-02-23 23:21:41,519 INFO    MainThread:31866 [wandb_run.py:_atexit_cleanup():2350] got exitcode: 0
+2025-02-23 23:21:41,519 INFO    MainThread:31866 [wandb_run.py:_restore():2332] restore
+2025-02-23 23:21:41,519 INFO    MainThread:31866 [wandb_run.py:_restore():2338] restore done
+2025-02-23 23:21:43,128 INFO    MainThread:31866 [wandb_run.py:_footer_history_summary_info():3963] rendering history
+2025-02-23 23:21:43,128 INFO    MainThread:31866 [wandb_run.py:_footer_history_summary_info():3995] rendering summary
+2025-02-23 23:21:43,128 INFO    MainThread:31866 [wandb_run.py:_footer_sync_info():3924] logging synced files
