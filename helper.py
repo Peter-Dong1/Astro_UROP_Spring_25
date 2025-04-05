@@ -126,7 +126,7 @@ def load_all_fits_files(data_dir=None):
         data_dir = DEFAULT_DATA_DIR
     return glob.glob(os.path.join(data_dir, "*.fits"))
 
-def load_n_light_curves(n, fits_files, band='all'):
+def load_n_light_curves(n, fits_files, band='all', trunc=20):
     """
     Loads a specified amount of light curves to analyze.
 
@@ -156,11 +156,11 @@ def load_n_light_curves(n, fits_files, band='all'):
     # Load all bands of the light curves into a list of DataFrames
     if band == 'all':
         print('starting 1st band')
-        light_curves_1 = [df for df in (load_light_curve(file, band = 0) for file in fits_files) if df is not None]
+        light_curves_1 = [df for df in (load_light_curve(file, band = 0, trunc = trunc) for file in fits_files) if df is not None]
         print('starting 2nd band')
-        light_curves_2 = [df for df in (load_light_curve(file, band = 1) for file in fits_files) if df is not None]
+        light_curves_2 = [df for df in (load_light_curve(file, band = 1, trunc = trunc) for file in fits_files) if df is not None]
         print('starting 3rd band')
-        light_curves_3 = [df for df in (load_light_curve(file, band = 2) for file in fits_files) if df is not None]
+        light_curves_3 = [df for df in (load_light_curve(file, band = 2, trunc = trunc) for file in fits_files) if df is not None]
         print('finished loading all bands')
 
         return light_curves_1, light_curves_2, light_curves_3
@@ -170,7 +170,7 @@ def load_n_light_curves(n, fits_files, band='all'):
 
         light_curves_1 = []
         for i, file in enumerate(fits_files):
-            df = load_light_curve(file, band=0)
+            df = load_light_curve(file, band=0, trunc = trunc)
             if df is not None:
                 light_curves_3.append(df)
             if total_files > 10:
@@ -184,7 +184,7 @@ def load_n_light_curves(n, fits_files, band='all'):
 
         light_curves_2 = []
         for i, file in enumerate(fits_files):
-            df = load_light_curve(file, band=1)
+            df = load_light_curve(file, band=1, trunc = trunc)
             if df is not None:
                 light_curves_2.append(df)
             if total_files > 10:
@@ -198,7 +198,7 @@ def load_n_light_curves(n, fits_files, band='all'):
 
         light_curves_3 = []
         for i, file in enumerate(fits_files):
-            df = load_light_curve(file, band=2)
+            df = load_light_curve(file, band=2, trunc = trunc)
             if df is not None:
                 light_curves_3.append(df)
             if total_files > 10:
@@ -243,8 +243,8 @@ def check_lightcurve_permissions(data_dir = '/pool001/rarcodia/eROSITA_public/da
                 data = hdul[1].data
                 if data is None or len(data) == 0:
                     inaccessible_files.append(file_path)
-            except KeyError:
-                print(f"Skipping file {file_path}: some key not found")
+            except IndexError:
+                print(f"Skipping file {file_path}: Index Out of Range")
                 inaccessible_files.append(file_path)
 
 
@@ -287,6 +287,7 @@ def partition_data(light_curves, test_size=0.2, val_size=0.1, random_seed=42):
     else:
         # If no validation set is needed, return only train and test sets
         return train_val_set, test_set
+
 
 # Only run this if the script is run directly (not imported)
 if __name__ == '__main__':

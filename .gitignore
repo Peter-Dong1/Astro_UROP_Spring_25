@@ -2,5 +2,9 @@
 /wandb
 /logs
 
+training_plots/**/*.txt
+
+plots/**/*.txt
+
 
 inaccessible_lightcurves.txt

@@ -1,3 +1,0 @@
-File Name	Loss
-Sample_1	178.161987
-Sample_0	157.383759

@@ -289,3 +289,123 @@ plot_top_25_losses(model, train_loader, losses, plot_dir)
 compute_and_plot_latent_space(model, train_loader, plot_dir)
 
 print(f"Testing and visualization complete. Check the {plot_dir} directory for results.")
+
+def detect_outliers_isolation_forest(model, data_loader, plot_dir, contamination=0.05, random_state=42):
+    """
+    Detect outliers in the latent space using Isolation Forest algorithm.
+    
+    Args:
+        model: The trained VAE model
+        data_loader: DataLoader containing the data to analyze
+        plot_dir: Directory to save the plots
+        contamination: The proportion of outliers in the dataset (default: 0.05)
+        random_state: Random seed for reproducibility
+        
+    Returns:
+        outlier_indices: Indices of the detected outliers
+        latent_vectors: The latent vectors used for outlier detection
+    """
+    model.eval()
+    print("Extracting latent representations for outlier detection...")
+    
+    # Extract latent representations
+    latent_vectors = []
+    sample_indices = []
+    
+    with torch.no_grad():
+        for batch_idx, (data, lengths) in enumerate(data_loader):
+            data = data.to(device)
+            _, mu, _ = model(data, lengths)
+            
+            # Ensure mu is 2D before appending
+            if len(mu.shape) > 2:
+                mu = mu.reshape(mu.shape[0], -1)  # Flatten all dimensions after batch
+                
+            latent_vectors.append(mu.cpu().numpy())
+            
+            # Keep track of the original indices
+            batch_start_idx = batch_idx * data_loader.batch_size
+            for i in range(len(data)):
+                sample_indices.append(batch_start_idx + i)
+    
+    latent_vectors = np.vstack(latent_vectors)
+    sample_indices = np.array(sample_indices)
+    print(f"Extracted latent vectors shape: {latent_vectors.shape}")
+    
+    # Apply Isolation Forest
+    print("Applying Isolation Forest for outlier detection...")
+    iso_forest = IsolationForest(
+        contamination=contamination,
+        random_state=random_state,
+        n_estimators=100,
+        n_jobs=-1
+    )
+    
+    # Fit and predict
+    predictions = iso_forest.fit_predict(latent_vectors)
+    
+    # -1 for outliers, 1 for inliers in isolation forest
+    outlier_mask = predictions == -1
+    outlier_indices = sample_indices[outlier_mask]
+    outlier_vectors = latent_vectors[outlier_mask]
+    inlier_vectors = latent_vectors[~outlier_mask]
+    
+    print(f"Detected {len(outlier_indices)} outliers out of {len(latent_vectors)} samples")
+    
+    # Apply PCA for visualization
+    pca = PCA(n_components=2)
+    all_2d = pca.fit_transform(latent_vectors)
+    
+    # Plot outliers vs inliers in PCA space
+    plt.figure(figsize=(12, 10))
+    plt.scatter(all_2d[~outlier_mask, 0], all_2d[~outlier_mask, 1], 
+                c='blue', label='Inliers', alpha=0.5)
+    plt.scatter(all_2d[outlier_mask, 0], all_2d[outlier_mask, 1], 
+                c='red', label='Outliers', alpha=0.7, s=100)
+    plt.title('Outlier Detection using Isolation Forest')
+    plt.xlabel('First Principal Component')
+    plt.ylabel('Second Principal Component')
+    plt.legend()
+    plt.savefig(os.path.join(plot_dir, f"isolation_forest_outliers_pca_{model_str}.png"))
+    plt.close()
+    
+    # Apply t-SNE if we have enough samples
+    if len(latent_vectors) >= 10:
+        try:
+            print("Applying t-SNE for visualization...")
+            tsne = TSNE(n_components=2, random_state=random_state)
+            all_2d_tsne = tsne.fit_transform(latent_vectors)
+            
+            plt.figure(figsize=(12, 10))
+            plt.scatter(all_2d_tsne[~outlier_mask, 0], all_2d_tsne[~outlier_mask, 1], 
+                        c='blue', label='Inliers', alpha=0.5)
+            plt.scatter(all_2d_tsne[outlier_mask, 0], all_2d_tsne[outlier_mask, 1], 
+                        c='red', label='Outliers', alpha=0.7, s=100)
+            plt.title('Outlier Detection using Isolation Forest (t-SNE)')
+            plt.xlabel('t-SNE dimension 1')
+            plt.ylabel('t-SNE dimension 2')
+            plt.legend()
+            plt.savefig(os.path.join(plot_dir, f"isolation_forest_outliers_tsne_{model_str}.png"))
+            plt.close()
+        except Exception as e:
+            print(f"Error applying t-SNE: {e}")
+    
+    # Calculate and plot anomaly scores
+    anomaly_scores = -iso_forest.score_samples(latent_vectors)
+    
+    plt.figure(figsize=(12, 6))
+    plt.hist(anomaly_scores, bins=50, alpha=0.7)
+    plt.axvline(x=iso_forest.threshold_, color='r', linestyle='--', 
+                label=f'Threshold ({iso_forest.threshold_:.3f})')
+    plt.title('Distribution of Anomaly Scores')
+    plt.xlabel('Anomaly Score')
+    plt.ylabel('Frequency')
+    plt.legend()
+    plt.savefig(os.path.join(plot_dir, f"isolation_forest_scores_{model_str}.png"))
+    plt.close()
+    
+    return outlier_indices, latent_vectors
+
+# Run outlier detection using Isolation Forest
+print("Running outlier detection using Isolation Forest...")
+outlier_indices, latent_vectors = detect_outliers_isolation_forest(model, test_loader, plot_dir)
