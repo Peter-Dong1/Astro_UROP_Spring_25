@@ -1,8 +1,10 @@
 /ppae
 /wandb
+/logs
 
 training_plots/**/*.txt
 plots/**/*.txt
 
+*.slurm
 
 inaccessible_lightcurves.txt
