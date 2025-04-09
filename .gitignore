@@ -1,9 +1,7 @@
 /ppae
 /wandb
-/logs
 
 training_plots/**/*.txt
-
 plots/**/*.txt
 
 

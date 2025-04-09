@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/pdong/Astro UROP/test_rnn.py", line 53, in <module>
+    old_config_dir = "/home/pdong/Astro UROP/training_plots/RNN Models/" + model_str
+                                                                           ^^^^^^^^^
+NameError: name 'model_str' is not defined

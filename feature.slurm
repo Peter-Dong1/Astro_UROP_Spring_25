@@ -20,4 +20,4 @@ conda activate myenv
 
 
 # Run your script
-python /home/pdong/Astro\ UROP/feature_extraction.py
+python -u /home/pdong/Astro\ UROP/feature_extraction.py

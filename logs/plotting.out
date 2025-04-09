@@ -1,0 +1,17 @@
+Config loaded from /home/pdong/Astro UROP/training_plots/RNN Models/30000_files_RNN/config.json
+Config saved to /home/pdong/Astro UROP/plots/RNN Models/30000_files_RNN/10/config.json
+Torch Diagnostics
+Available: True
+Version: 2.5.1, 12.4
+Start Loading Files ...
+Loaded Files Complete
+Start Loading 10 Light Curves ...
+starting 1st band
+starting 2nd band
+starting 3rd band
+finished loading all bands
+Loading Light Curves Complete. Length: 10
+Start Partitioning Data ...
+Partitioning Complete
+Finished Loading LCs
+Starting to use model

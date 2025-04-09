@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J RNN              # Job name
+#SBATCH -J testing              # Job name
 #SBATCH -o logs/RNN.out          # Standard output and error log
 #SBATCH -e logs/RNN.err          # Standard error log
 #SBATCH -p mit_normal_gpu      # Partition (queue) name # mit_normal_gpu sched_mit_hill
@@ -9,7 +9,6 @@
 #SBATCH --gres=gpu:1           # Request 1 GPU
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=pdong@mit.edu
-
 # Load required modules (if any)
 # module load python  # Adjust based on your Python version
 
@@ -21,5 +20,5 @@ source /home/software/anaconda3/2023.07/etc/profile.d/conda.sh # Adjust path if 
 conda activate myenv
 
 
-# Run your script (replace with your actual script)
-python /home/pdong/Astro\ UROP/trainmodelmulti.py
+# Run your script
+python -u /home/pdong/Astro\ UROP/RNN_train.py

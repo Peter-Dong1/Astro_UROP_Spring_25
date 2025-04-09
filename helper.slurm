@@ -21,4 +21,4 @@ conda activate myenv
 
 
 # Run your script (replace with your actual script)
-python /home/pdong/Astro\ UROP/helper.py
+python -u /home/pdong/Astro\ UROP/helper.py

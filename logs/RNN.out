@@ -1,0 +1,20 @@
+True
+torch diagonostics
+2.5.1
+12.4
+True
+start to load light curves
+loaded files
+starting 1st band
+starting 2nd band
+starting 3rd band
+finished loading all bands
+finished loading lcs
+69967
+Beginning training...
+Epoch 1 | Train Loss: 3.6104 | Valid Loss: 1.0064
+Epoch 1001 | Train Loss: 0.0705 | Valid Loss: 0.2653
+Epoch 2001 | Train Loss: 0.0510 | Valid Loss: 0.2892
+Saved Model at /home/pdong/Astro UROP/models/RNN_36_Latent.h5
+losses saved!
+done!

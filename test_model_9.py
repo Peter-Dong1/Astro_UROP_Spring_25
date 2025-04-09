@@ -6,6 +6,7 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 import random
 import math
+import json
 
 import torch
 from torch.nn import functional as F
@@ -17,6 +18,57 @@ from sklearn.ensemble import IsolationForest
 from sklearn.decomposition import PCA
 from helper import load_light_curve, load_n_light_curves, load_all_fits_files, partition_data
 
+# Import the model from the RNN_9_model.py file
+from RNN_9_model import ELBO, Poisson_NLL, RNN_VAE, Decoder, Encoder, collate_fn_err_mult
+
+# Function to save hyperparameters to a config file
+def save_config(config, save_path):
+    """
+    Save model configuration to a JSON file
+
+    Args:
+        config (dict): Dictionary containing model hyperparameters
+        save_path (str): Path to save the config file
+    """
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    with open(save_path, 'w') as f:
+        json.dump(config, f, indent=4)
+    print(f"Config saved to {save_path}")
+
+# Function to load hyperparameters from a config file
+def load_config(config_path):
+    """
+    Load model configuration from a JSON file
+
+    Args:
+        config_path (str): Path to the config file
+
+    Returns:
+        dict: Dictionary containing model hyperparameters
+    """
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+    print(f"Config loaded from {config_path}")
+    return config
+
+# Define a dictionary with all hyperparameters
+hyperparams = {
+    "model_name": "RNN_Large_3bands",
+    "learning_rate": 1e-5,
+    "data_size": 16384,
+    "num_epochs": 3000,
+    "latent_size": 22,
+    "KLD_coef": 0.0035,
+    "hidden_size": 512,
+    "input_size": 9,
+    "output_size": 1,
+    "batch_size": 32
+}
+
+# Save hyperparameters to config file
+config_path = "./config.json"
+save_config(hyperparams, config_path)
+
 # set the device we're using for training.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # device = torch.device("cpu")
@@ -27,218 +79,12 @@ print(torch.__version__)  # Check PyTorch version
 print(torch.version.cuda)
 print(torch.cuda.is_available())
 
-# the evidence lower bound loss for training autoencoders
-# TODO: pass in another variable call mask
-# the evidence lower bound loss for training autoencoders
-def ELBO(x_hat, x, mu, logvar):
-    # the reconstruction loss
-    MSE = torch.nn.MSELoss(reduction='sum')(x_hat, x)
-
-    # the KL-divergence between the latent distribution and a multivariate normal
-    KLD = -0.01 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return MSE
-def Poisson_NLL(x_hat, x, mu, logvar):
-    """
-    Poisson Negative Log-Likelihood (NLL) Loss with KL Divergence.
-
-    Args:
-    - x_hat (Tensor): Predicted Poisson log-rates.
-    - x (Tensor): Observed photon counts (must be non-negative integers).
-    - mu (Tensor): Mean from the VAE's latent space.
-    - logvar (Tensor): Log-variance from the VAE's latent space.
-
-    Returns:
-    - loss (Tensor): Computed Poisson NLL loss.
-    """
-    # Ensure positive predicted rates by exponentiating x_hat
-    lambda_pred = torch.exp(x_hat)  # Poisson rate (must be positive)
-
-    # Poisson negative log-likelihood loss
-    lambda_pred = torch.exp(x_hat) + 1e-4  # Avoid too small values
-    poisson_nll = lambda_pred - x * torch.log(lambda_pred + 1e-8)
-
-    # Optional: Add the factorial term for completeness (can be ignored)
-    # poisson_nll += torch.lgamma(x + 1)  # lgamma(x+1) computes log(x!)
-
-    # KL Divergence to regularize the latent space
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-
-    # Return total loss (Poisson NLL + KL divergence)
-    return poisson_nll.mean() # Scale KL by a small factor
-# our encoder class
-class Encoder(torch.nn.Module):
-    def __init__(self, input_size=3, hidden_size=8, num_layers=1, dropout=0.2):
-        super(Encoder, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.gru = torch.nn.GRU(
-            input_size,
-            hidden_size,
-            num_layers,
-            dropout=dropout,
-            batch_first=True
-        )
-
-    def forward(self, x, lengths):
-        # x: tensor of shape (batch_size, seq_length, input_size)
-        # lengths: tensor of shape (batch_size), containing the lengths of each sequence in the batch
-
-        # print(f"EF Input shape: {x.shape}")               # (num_layers, batch_size, hidden_size)
-
-        # NOTE: Here we use the pytorch functions pack_padded_sequence and pad_packed_sequence, which
-        # allow us to
-        packed_x = pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
-        packed_output, hidden = self.gru(packed_x)
-        output, _ = pad_packed_sequence(packed_output, batch_first=True)
-
-        # print(f"EF Packed Output shape: {packed_output.data.shape}")  # Packed sequences
-        # print(f"EF Output shape: {output.shape} | Hidden shape: {hidden.shape}")                    # (batch_size, seq_length, hidden_size)
-        return output, hidden
-
-# our decoder class
-class Decoder(torch.nn.Module):
-    def __init__(
-        self, input_size=3, hidden_size=8, output_size=1, num_layers=1, dropout=0.2 # change hidden size to 128 later
-    ):
-        super(Decoder, self).__init__()
-        self.hidden_size = hidden_size
-        self.output_size = output_size
-        self.num_layers = num_layers
-        self.gru = torch.nn.GRU(
-            input_size,
-            hidden_size,
-            num_layers,
-            dropout=dropout,
-            batch_first=True
-        )
-        self.fc = torch.nn.Linear(hidden_size, output_size)
-
-    def forward(self, x, hidden, lengths=None):
-        # print(f"DF Input shape: {x.shape}")
-        if lengths is not None: # not being used
-            # unpad the light curves so that our latent representations learn only from real data
-            packed_x = pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
-            packed_output, hidden = self.gru(packed_x, hidden)
-
-            # re-pad the light curves so that they can be processed elsewhere
-            output, _ = pad_packed_sequence(packed_output, batch_first=True)
-            # print(f"DF1 Packed Output shape: {packed_output.data.shape}")  # Packed sequences
-            # print(f"DF1 Output shape: {output.shape}")                    # (batch_size, seq_length, hidden_size)
-            # print(f"DF1 Hidden shape: {hidden.shape}")
-        else:
-            output, hidden = self.gru(x, hidden)
-            # print(f"DF2 Output shape: {output.shape} | Hidden shape: {hidden.shape}")                    # (batch_size, seq_length, hidden_size)
-        prediction = self.fc(output)
-        prediction = torch.exp(prediction)  # Ensure positive outputs for Poisson rate
-        return prediction, hidden
-
-class RNN_VAE(torch.nn.Module): # TODO: Print out shapes of the things
-    """RNN-VAE: A Variational Auto-Encoder with a Recurrent Neural Network Layer as the Encoder."""
-
-    def __init__(
-        self, input_size=3, hidden_size=64, latent_size=50, dropout=0.2, output_size=1
-    ):
-        """
-        input_size: int, batch_size x sequence_length x input_dim
-        hidden_size: int, output size
-        latent_size: int, latent z-layer size
-        num_gru_layer: int, number of layers
-        """
-        super(RNN_VAE, self).__init__()
-        self.device = device
-
-        # dimensions
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.latent_size = latent_size
-        self.num_layers = 2
-        self.dropout = dropout
-
-        self.enc = Encoder(input_size=input_size, hidden_size=hidden_size, num_layers=self.num_layers, dropout=self.dropout)
-
-        self.dec = Decoder(
-            input_size=latent_size,
-            output_size=output_size,
-            hidden_size=hidden_size,
-            dropout=self.dropout,
-            num_layers=self.num_layers,
-        )
-
-        self.fc21 = torch.nn.Linear(self.hidden_size, self.latent_size)
-        self.fc22 = torch.nn.Linear(self.hidden_size, self.latent_size)
-        self.fc3 = torch.nn.Linear(self.latent_size, self.hidden_size)
-
-    def reparameterize(self, mu, logvar):
-        if self.training:
-            return mu + torch.randn(mu.shape).to(device)*torch.exp(0.5*logvar)
-        else:
-            return mu
-
-    def forward(self, x, lengths):
-        batch_size, seq_len, feature_dim = x.shape
-
-        # encode input space
-        enc_output, enc_hidden = self.enc(x, lengths)
-
-        # Correctly accessing the hidden state of the last layer
-        enc_h = enc_hidden[-1].to(device)  # This is now [batch_size, hidden_size]
-        # print(f"Hidden State of Last Layer: {enc_hidden[-1].shape}")
-
-        # extract latent variable z
-        mu = self.fc21(enc_h)
-        logvar = self.fc22(enc_h)
-        z = self.reparameterize(mu, logvar)
-        # print(f"mu: {mu} | logvar: {logvar} | z: {z}")
-        # print(f"Mean of mu: {mu.mean().item()}, Std of mu: {mu.std().item()}")
-        # print(f"Mean of logvar: {logvar.mean().item()}, Std of logvar: {logvar.std().item()}")
-
-        # initialize hidden state
-        h_ = self.fc3(z) # Shape: (batch_size, hidden_size)
-        h_ = h_.unsqueeze(0)  # Add an extra dimension for num_layers
-        # Repeat the hidden state for each layer
-        h_ = h_.repeat(self.dec.num_layers, 1, 1)  # Now h_ is [num_layers, batch_size, hidden_size]
-
-        # print(f"z: {z.shape}")
-
-        # decode latent space
-        z = z.repeat(1, seq_len, 1)
-        z = z.view(batch_size, seq_len, self.latent_size).to(device)
-
-        # initialize hidden state
-        hidden = h_.contiguous() # just for effieenciy - stored in same memory
-        x_hat, hidden = self.dec(z, hidden) # runs decoder GRU
-
-        return x_hat, mu, logvar
-
-# Set up DataLoader
-def collate_fn_err(batch):
-    rate_low = [torch.tensor(lc[0]['RATE'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-    lowErr_low = [torch.tensor(lc[0]['ERRM'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-    upErr_low = [torch.tensor(lc[0]['ERRP'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-
-    rate_med = [torch.tensor(lc[1]['RATE'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-    lowErr_med = [torch.tensor(lc[1]['ERRM'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-    upErr_med = [torch.tensor(lc[1]['ERRP'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-
-    rate_hi = [torch.tensor(lc[2]['RATE'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-    lowErr_hi= [torch.tensor(lc[2]['ERRM'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-    upErr_hi = [torch.tensor(lc[2]['ERRP'].values.byteswap().newbyteorder(), dtype=torch.float32) for lc in batch]
-
-    sequences = [torch.stack([rl, lel, uel, rm, lem, uem, rh, leh, ueh], dim=-1) for rl, lel, uel, rm, lem, uem, rh, leh, ueh in zip(rate_low, lowErr_low, upErr_low, rate_med, lowErr_med, upErr_med, rate_hi, lowErr_hi, upErr_hi)]
-    lengths = torch.tensor([len(seq) for seq in sequences], dtype=torch.int64)
-
-    # Pad sequences
-    x = pad_sequence(sequences, batch_first=True)
-
-    return x, lengths
-
-
 print('start to load light curves')
 
 fits_files = load_all_fits_files()
 
 # light_curves_sample = load_n_light_curves(16384, fits_files, band = "med")
-lc_low, lc_med, lc_high = load_n_light_curves(16384, fits_files, band = "all")
+lc_low, lc_med, lc_high = load_n_light_curves(hyperparams["data_size"], fits_files, band = "all")
 # lc_low, lc_med, lc_high = load_n_light_curves(10, fits_files, band = "all")
 
 light_curves_sample = list(zip(lc_low, lc_med, lc_high))
@@ -246,17 +92,28 @@ print('finished loading lcs')
 print(len(light_curves_sample))
 
 test_dataset = light_curves_sample
-test_loader = DataLoader(test_dataset, batch_size=32, collate_fn=collate_fn_err, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=hyperparams["batch_size"], collate_fn=collate_fn_err_mult, shuffle=True)
 
 print('finish loading lcs')
 
-model = RNN_VAE(input_size=9, hidden_size=512, latent_size=22, output_size=1).to(device)
-model_str = 'RNN_Large_3bands'
+model = RNN_VAE(
+    input_size=hyperparams["input_size"],
+    hidden_size=hyperparams["hidden_size"],
+    latent_size=hyperparams["latent_size"],
+    output_size=hyperparams["output_size"],
+    device=device
+).to(device)
+
+model_str = hyperparams["model_name"]
 model.load_state_dict(torch.load('./models/' + model_str + '.h5'))
 
 plot_dir = "/home/pdong/Astro UROP/plots/" + model_str + "_test_large"
 # Ensure the directory exists
 os.makedirs(plot_dir, exist_ok=True)
+
+# Save hyperparameters to config file in the plotting folder
+config_path = os.path.join(plot_dir, "config.json")
+save_config(hyperparams, config_path)
 
 model.eval()
 with torch.no_grad():
@@ -269,7 +126,7 @@ with torch.no_grad():
     for i in range(25):
         idx = random.randint(0, len(test_dataset) - 1)
         sample = test_dataset[idx]
-        x, lengths = collate_fn_err([sample])
+        x, lengths = collate_fn_err_mult([sample])
         x = x.to(device)
         lengths = lengths.cpu().to(torch.int64)
 
