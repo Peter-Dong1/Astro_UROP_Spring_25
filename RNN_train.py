@@ -21,10 +21,10 @@ from RNN_9_model import ELBO, Poisson_NLL, RNN_VAE, Decoder, Encoder, collate_fn
 import wandb
 import json
 
-new_model_str = "30000_files_RNN"
+new_model_str = "50000_files_RNN"
 learning_rate = 1e-5
-data_size = 30000
-num_epochs = 3000
+data_size = 50000
+num_epochs = 2000
 latent_size = 32
 KLD_coef = 0.0035
 hidden_size = 512

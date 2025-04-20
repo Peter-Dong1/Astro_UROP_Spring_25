@@ -5,7 +5,7 @@
 #SBATCH -p sched_mit_hill      # Partition (queue) name # mit_normal_gpu sched_mit_hill
 #SBATCH -N 1                   # Number of nodes
 #SBATCH -n 4                   # Number of CPU cores
-#SBATCH -t 08:00:00            # Runtime in HH:MM:SS (adjust as needed)
+#SBATCH -t 12:00:00            # Runtime in HH:MM:SS (adjust as needed)
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=pdong@mit.edu
 # Load required modules (if any)

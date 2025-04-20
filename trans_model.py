@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from helper import load_light_curve, load_n_light_curves, load_all_fits_files, partition_data
 
 import wandb
+import json
 
 class PositionalEncoding(nn.Module):
     """
@@ -411,22 +412,77 @@ def compute_losses(model, test_loader):
 
 if __name__ == '__main__':
     # Initialize wandb
+
+    new_model_str = "140000_files_trans"
+    learning_rate = 1e-5
+    data_size = 100000
+    num_epochs = 1500
+    latent_size = 40
+    d_model = 256
+    nhead = 4
+    num_encoder_layers = 2
+    num_decoder_blocks = 3
+    dropout = 0.1
+    KLD_coef = 0.0035
+    hidden_size = 256
+    input_size = 9
+    output_size = 1
+    batch_size = 32
+
+
     wandb.init(
-        project="transformer_vae_large2",
+        project=new_model_str,
         config={
-            "learning_rate": 1e-5,
+            "learning_rate": learning_rate,
             "architecture": "TransformerVAE",
             "dataset": "3 LCs",
-            "epochs": 10000,
-            "latent_size": 40,
-            "d_model": 256,
-            "nhead": 3,
-            "num_encoder_layers": 2,
-            "hidden_size": 256,
-            "num_decoder_blocks": 3,
-            "dropout": 0.1
+            'data_size': data_size,
+            "epochs": num_epochs,
+            "latent_size": latent_size,
+            "d_model": d_model,
+            "nhead": nhead,
+            "num_encoder_layers": num_encoder_layers,
+            "hidden_size": hidden_size,
+            "num_decoder_blocks": num_decoder_blocks,
+            "dropout": dropout,
+            "KLD_coef": KLD_coef
         }
     )
+
+    # Define a dictionary with all hyperparameters
+    hyperparams = {
+        "learning_rate": learning_rate,
+        "architecture": "TransformerVAE",
+        "dataset": "3 LCs",
+        'data_size': data_size,
+        "epochs": num_epochs,
+        "latent_size": latent_size,
+        "d_model": d_model,
+        "nhead": nhead,
+        "num_encoder_layers": num_encoder_layers,
+        "hidden_size": hidden_size,
+        "num_decoder_blocks": num_decoder_blocks,
+        "dropout": dropout,
+        "KLD_coef": KLD_coef,
+        "input_size": input_size,
+        "output_size": output_size,
+        "batch_size": batch_size
+    }
+
+    def save_config(config, save_path):
+        """
+        Save model configuration to a JSON file
+
+        Args:
+            config (dict): Dictionary containing model hyperparameters
+            save_path (str): Path to save the config file
+        """
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, 'w') as f:
+            json.dump(config, f, indent=4)
+        print(f"Config saved to {save_path}")
+
+
 
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -437,7 +493,7 @@ if __name__ == '__main__':
     print('Loading light curves...')
     fits_files = load_all_fits_files()
     print('finished getting all files')
-    lc_low, lc_med, lc_high = load_n_light_curves(100000, fits_files, band="all")
+    lc_low, lc_med, lc_high = load_n_light_curves(data_size, fits_files, band="all")
     # lc_low, lc_med, lc_high = load_n_light_curves(10, fits_files, band="all")
     light_curves_sample = list(zip(lc_low, lc_med, lc_high))
     print(f'Loaded {len(light_curves_sample)} light curves')
@@ -452,27 +508,36 @@ if __name__ == '__main__':
 
     # Initialize model
     model = TransformerVAE(
-        input_size=9,  # 1 time +  3 bands x 3 values (RATE, ERRM, ERRP)
-        d_model=256,
-        nhead=4,
-        num_encoder_layers=2,
-        latent_size=40,
-        hidden_size=256,
-        num_decoder_blocks=3,
-        dropout=0.1
+        input_size=input_size,  # 1 time +  3 bands x 3 values (RATE, ERRM, ERRP)
+        d_model=d_model,
+        nhead=nhead,
+        num_encoder_layers=num_encoder_layers,
+        latent_size=latent_size,
+        hidden_size=hidden_size,
+        num_decoder_blocks=num_decoder_blocks,
+        dropout=dropout
     ).to(device)
 
     # Training parameters
-    num_epochs = 1500
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    num_epochs = num_epochs
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
 
     # Create directories for saving
-    model_str = 'trans_100k_1500'
     model_dir = "./models"
-    plot_dir = "./plots/" + model_str
+    plot_dir = "./plots/Transformer plots/" + new_model_str
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(plot_dir, exist_ok=True)
+
+    # Make directories for saving model and plots
+    save_dir = "/home/pdong/Astro UROP/models/Transformer Models"
+    os.makedirs(save_dir, exist_ok=True)
+
+    plot_dir = "/home/pdong/Astro UROP/training_plots/Transformer Models/" + new_model_str
+    os.makedirs(plot_dir, exist_ok=True)
+
+    config_path = os.path.join(plot_dir, "config.json")
+    save_config(hyperparams, config_path)
 
     # Select a benchmark sample for consistent visualization
     benchmark_idx = random.randint(0, len(train_set) - 1)
@@ -549,7 +614,7 @@ if __name__ == '__main__':
         # Save best model
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), os.path.join(model_dir, model_str + '.h5'))
+            torch.save(model.state_dict(), os.path.join(model_dir, new_model_str + '.h5'))
 
     # Final evaluation
     print('Computing final losses and generating plots...')
@@ -568,4 +633,4 @@ if __name__ == '__main__':
 
     # Finish wandb run
     wandb.finish()
-    print(f'Training completed. Model at {model_dir + model_str} saved and evaluation plots generated at {plot_dir + model_str}.')
+    print(f'Training completed. Model at {model_dir + new_model_str} saved and evaluation plots generated at {plot_dir + new_model_str}.')

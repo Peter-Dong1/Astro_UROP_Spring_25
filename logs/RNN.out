@@ -1,20 +1,9 @@
-True
-torch diagonostics
-2.5.1
-12.4
-True
-start to load light curves
-loaded files
-starting 1st band
-starting 2nd band
-starting 3rd band
-finished loading all bands
-finished loading lcs
-69967
-Beginning training...
-Epoch 1 | Train Loss: 3.6104 | Valid Loss: 1.0064
-Epoch 1001 | Train Loss: 0.0705 | Valid Loss: 0.2653
-Epoch 2001 | Train Loss: 0.0510 | Valid Loss: 0.2892
-Saved Model at /home/pdong/Astro UROP/models/RNN_36_Latent.h5
-losses saved!
-done!
+Torch Diagnostics
+Available: True
+Version: 2.5.1, 12.4
+Start Loading Files ...
+Loaded Files Complete
+Start Loading Light Curves ...
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mcrimson-valley-1[0m at: [34mhttps://wandb.ai/peterdong1951-massachusetts-institute-of-technology/140000_files_RNN/runs/lawk71xk[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../orcd/home/002/pdong/Astro UROP/wandb/run-20250418_093303-lawk71xk/logs[0m

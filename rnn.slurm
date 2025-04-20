@@ -21,4 +21,4 @@ conda activate myenv
 
 
 # Run your script
-python -u /home/pdong/Astro\ UROP/RNN_train.py
+python -u /home/pdong/Astro\ UROP/train_rnn.py

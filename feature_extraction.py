@@ -14,6 +14,7 @@ import math
 import time
 from datetime import datetime
 import seaborn as sns
+from scipy.stats import linregress
 
 from helper import (
     load_light_curve,
@@ -23,34 +24,107 @@ from helper import (
     DEFAULT_DATA_DIR
 )
 
-size = 191_000
-# Create output directory for plots if it doesn't exist
-FILE_DIR = '/home/pdong/Astro UROP/plots/feature_extraction_plots' + f"/{size}"
-# Create directories for both HDBSCAN and UMAT outputs
-FEATURE_OUTPUT_DIR = FILE_DIR + "/FEATURES"
-HDBSCAN_OUTPUT_DIR = FILE_DIR + "/HDBSCAN"
-UMAT_OUTPUT_DIR = FILE_DIR + "/UMAT"
-OUTPUT_DIR = HDBSCAN_OUTPUT_DIR  # Default to HDBSCAN for backward compatibility
-os.makedirs(HDBSCAN_OUTPUT_DIR, exist_ok=True)
-os.makedirs(UMAT_OUTPUT_DIR, exist_ok=True)
-os.makedirs(FEATURE_OUTPUT_DIR, exist_ok=True)
+# Define functions for time series analysis
+def lag1_autocorrelation(time_series):
+    """
+    Calculate the lag-1 autocorrelation of a time series.
 
-print("Starting feature extraction process...")
-print("Loading FITS files...")
-start_time = time.time()
-fits_files = load_all_fits_files()
-print(f"Loaded {len(fits_files)} FITS files in {time.time() - start_time:.2f} seconds")
+    Parameters:
+        time_series (array-like): Input time series data
 
-print("Loading light curves...")
-start_time = time.time()
-light_curves = load_n_light_curves(size, fits_files, band = "med")
-print(f"Loaded {len(light_curves)} light curves in {time.time() - start_time:.2f} seconds")
+    Returns:
+        float: Lag-1 autocorrelation coefficient
+    """
+    ts = np.array(time_series)
+    ts_mean = np.mean(ts)
+    ts_shifted = ts[1:]  # Shifted by one, removing first element so "lagged"
+    ts_original = ts[:-1]  # Original time series, excluding last element
 
+    # Measurement of covariance between the original values and the lagged values, relative to the mean
+    numerator = np.sum((ts_original - ts_mean) * (ts_shifted - ts_mean))
+    denominator = np.sum((ts_original - ts_mean) ** 2)  # Variance of original time series
+    return numerator / denominator if denominator != 0 else 0
+
+def hurst_exponent(time_series):
+    """
+    Calculate the Hurst exponent of a time series using rescaled range analysis.
+    H > 0.5 indicates persistence, H < 0.5 indicates mean-reverting behavior.
+
+    Parameters:
+        time_series (array-like): Input time series data
+
+    Returns:
+        float: Hurst exponent
+    """
+    ts = np.array(time_series)
+    N = len(ts)
+
+    # Need at least 4 points to calculate Hurst exponent
+    if N < 4:
+        return 0.5  # Return neutral value for very short series
+
+    # Consider lags from 2 to min(N-1, 100) to avoid excessive computation for large series
+    max_lag = min(N-1, 100)
+    lags = range(2, max_lag)
+
+    # Calculate tau values and filter out zeros and negative values
+    tau = []
+    valid_lags = []
+
+    for lag in lags:
+        diff = ts[lag:] - ts[:-lag]
+        std_val = np.std(diff)
+        if std_val > 0:  # Only keep positive standard deviations
+            tau.append(std_val)
+            valid_lags.append(lag)
+
+    # If we don't have enough valid points, return default value
+    if len(valid_lags) < 4:
+        return 0.5
+
+    # Linear fit to estimate the Hurst exponent
+    try:
+        reg = linregress(np.log(valid_lags), np.log(tau))
+        return reg.slope * 2.0  # Hurst exponent
+    except (ValueError, RuntimeWarning):
+        # If regression fails, return neutral value
+        return 0.5
+
+def rise_fall_ratio_over_time(time_series):
+    """
+    Calculate the rise/fall ratio at every step of the time series.
+
+    Parameters:
+        time_series (array-like): Input time series data
+
+    Returns:
+        float: Mean rise/fall ratio (excluding undefined values)
+    """
+    ts = np.array(time_series)
+
+    # If time series is too short, return neutral value
+    if len(ts) < 3:
+        return 1.0
+
+    # Calculate differences between consecutive elements
+    rises = ts[1:] - ts[:-1]
+
+    rise_count = np.sum(rises > 0)  # Number of positive changes
+    fall_count = np.sum(rises < 0)  # Number of negative changes
+
+    # Calculate the overall rise/fall ratio and handle division by zero
+    if fall_count == 0:
+        if rise_count == 0:
+            return 1.0  # Neutral value if no changes
+        else:
+            return 10.0  # Cap at a high value if only rises
+    else:
+        return min(rise_count / fall_count, 10.0)  # Cap at 10.0 to avoid extreme values
 
 def df_extract_statistical_features_error(df):
     """Extract statistical features from light curve with error handling"""
     # Print file being processed
-    print(f"Processing file: {df.attrs.get('FILE_NAME', 'Unknown')}")
+    # print(f"Processing file: {df.attrs.get('FILE_NAME', 'Unknown')}")
     """
     Extract statistical features from the light curve, accounting for measurement errors,
     and return as a single-row DataFrame.
@@ -73,7 +147,7 @@ def df_extract_statistical_features_error(df):
     iqr = np.percentile(df['RATE'], 75) - np.percentile(df['RATE'], 25)
 
     # Beyond 1 sigma (error-aware)
-    beyond_1_sigma = np.sum(np.abs(df['RATE'] - weighted_mean) > np.sqrt(weighted_variance)) / len(df['RATE'])
+    # beyond_1_sigma = np.sum(np.abs(df['RATE'] - weighted_mean) > np.sqrt(weighted_variance)) / len(df['RATE'])
 
     # Median Absolute Deviation (MAD)
     mad = stats.median_abs_deviation(df['RATE'])
@@ -90,22 +164,23 @@ def df_extract_statistical_features_error(df):
     # Flux Percentile Ratio (95th - 5th percentile)
     flux_percentile_ratio = np.percentile(df['RATE'], 95) - np.percentile(df['RATE'], 5)
 
+    # Time series analysis features
+    lag1_autocorr = lag1_autocorrelation(df['RATE'])
+    hurst_exp = hurst_exponent(df['RATE'])
+    mean_rise_fall_ratio = rise_fall_ratio_over_time(df['RATE'])
+
+
     # Create a row with features
-    # feature_names = [
-    #     "weighted_mean", "weighted_variance", "median", "iqr", "beyond_1_sigma",
-    #     "mad", "skewness", "kurtosis", "max_amp", "flux_percentile_ratio"
-    # ]
     feature_names = [
-        "weighted_mean", "weighted_variance", "median", "iqr", "beyond_1_sigma",
-        "mad", "max_amp", "flux_percentile_ratio"
+        "weighted_mean", "weighted_variance", "median", "iqr",
+        "mad", "max_amp", "flux_percentile_ratio", "lag1_autocorr", "hurst_exp",
+        "mean_rise_fall_ratio"
     ]
-    # feature_values = np.array([
-    #     weighted_mean, weighted_variance, median, iqr, beyond_1_sigma,
-    #     mad, skewness, kurtosis, max_amp, flux_percentile_ratio
-    # ])
+
     feature_values = np.array([
-        weighted_mean, weighted_variance, median, iqr, beyond_1_sigma,
-        mad, max_amp, flux_percentile_ratio
+        weighted_mean, weighted_variance, median, iqr,
+        mad, max_amp, flux_percentile_ratio, lag1_autocorr, hurst_exp,
+        mean_rise_fall_ratio
     ])
 
     # Create the DataFrame row
@@ -142,7 +217,6 @@ def df_process_all_light_curves_error(light_curves):
     result = pd.concat(features_list, ignore_index=True)
     print(f"Feature extraction completed in {time.time() - start_time:.2f} seconds")
     return result
-
 
 # This method works with a pandas dataframe consisting of more information
 def df_detect_outliers_extreme(df, contamination=0.05):
@@ -301,7 +375,6 @@ def df_detect_outliers_extreme(df, contamination=0.05):
 
     return df
 
-
 def df_visualize_clusters(scaled_features, combined_outliers, output_file=None):
     """
     Visualize clusters in 2D using PCA, highlighting normal points and outliers.
@@ -316,8 +389,7 @@ def df_visualize_clusters(scaled_features, combined_outliers, output_file=None):
 
     # Create default output filename if none provided
     if output_file is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_clusters_{timestamp}.png")
+        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_clusters.png")
 
     # Reduce to 2D using PCA
     pca = PCA(n_components=2)
@@ -345,7 +417,6 @@ def df_visualize_clusters(scaled_features, combined_outliers, output_file=None):
     plt.show()
     print(f"Visualization completed in {time.time() - start_time:.2f} seconds")
 
-
 def df_analyze_light_curves(light_curves, contamination=0.05, vis=True, output_file=None):
     print("\nStarting light curve analysis pipeline...")
     total_start_time = time.time()
@@ -372,9 +443,88 @@ def df_analyze_light_curves(light_curves, contamination=0.05, vis=True, output_f
         df_visualize_clusters(scaled_features, combined_outliers, output_file)
 
     return results
-print("\n" + "="*50)
-print("STARTING MAIN EXECUTION")
-print("="*50)
+
+# This method works with a pandas dataframe consisting of more information
+def extract_features_from_lc(light_curve, output_file=None, band=1):
+    """
+    Extract features from a single light curve and output the results to a text file.
+
+    Parameters:
+        file_path (str): Path to the FITS file containing the light curve.
+        output_file (str, optional): Path to the output text file. If None, a default name will be used.
+        band (int, optional): Energy band index to load data for (default: 1 for medium band).
+
+    Returns:
+        str: Path to the output text file.
+    """
+
+    # Extract features
+    features_df = df_extract_statistical_features_error(light_curve)
+
+    # Create a readable output format
+    feature_names = features_df['feature_names'].iloc[0]
+    feature_values = features_df['feature_values'].iloc[0]
+
+    output_file = f"{output_file}_features.txt"
+
+    # Write to text file
+    with open(output_file, 'w') as f:
+        f.write("Feature examples for 1 light curve:")
+        f.write(f"Band: {band} (0=low, 1=medium, 2=high)\n")
+        f.write("-" * 50 + "\n")
+
+        # Write each feature and its value
+        for name, value in zip(feature_names, feature_values):
+            f.write(f"{name}: {value:.6f}\n")
+
+    print(f"Features successfully written to: {output_file}")
+    return output_file
+
+def extract_features_to_file(file_path, output_file=None, band=1):
+    """
+    Extract features from a single light curve and output the results to a text file.
+
+    Parameters:
+        file_path (str): Path to the FITS file containing the light curve.
+        output_file (str, optional): Path to the output text file. If None, a default name will be used.
+        band (int, optional): Energy band index to load data for (default: 1 for medium band).
+
+    Returns:
+        str: Path to the output text file.
+    """
+    print(f"Extracting features from: {file_path}")
+
+    # Load the light curve
+    light_curve = load_light_curve(file_path, band=band)
+
+    if light_curve is None:
+        print(f"Error: Could not load light curve from {file_path}")
+        return None
+
+    # Extract features
+    features_df = df_extract_statistical_features_error(light_curve)
+
+    # Create a readable output format
+    feature_names = features_df['feature_names'].iloc[0]
+    feature_values = features_df['feature_values'].iloc[0]
+
+    # Create output file name if not provided
+    if output_file is None:
+        base_name = os.path.basename(file_path).replace('.fits', '')
+        output_file = f"{base_name}_features.txt"
+
+    # Write to text file
+    with open(output_file, 'w') as f:
+        f.write(f"Features for light curve: {os.path.basename(file_path)}\n")
+        f.write(f"Band: {band} (0=low, 1=medium, 2=high)\n")
+        f.write("-" * 50 + "\n")
+
+        # Write each feature and its value
+        for name, value in zip(feature_names, feature_values):
+            f.write(f"{name}: {value:.6f}\n")
+
+    print(f"Features successfully written to: {output_file}")
+    return output_file
 
 # Define functions for grid plotting
 def plot_light_curve(ax, lc, title=None, is_outlier=False):
@@ -425,13 +575,13 @@ def create_grid_plots(light_curves, results, output_dir, timestamp):
                 lc = light_curves[idx]
                 file_name = os.path.basename(results.iloc[idx]['file_path'])
                 rank = results.iloc[idx].get('outlier_rank', 'N/A')
-                title = f"Outlier #{i+1} (Rank: {rank})\n{file_name[-18:-9]}"
+                title = f"Outlier #{i+1} (Rank: {rank})\n{file_name[:-18]}"
                 plot_light_curve(axes_outliers[i], lc, title, is_outlier=True)
             else:
                 axes_outliers[i].axis('off')  # Hide unused subplots
 
         plt.tight_layout()
-        outlier_grid_file = os.path.join(output_dir, f"outlier_grid_{timestamp}.png")
+        outlier_grid_file = os.path.join(output_dir, f"outlier_grid.png")
         fig_outliers.savefig(outlier_grid_file, dpi=300)
         plt.close(fig_outliers)
         # print(f"Outlier grid plot saved to: {outlier_grid_file}")
@@ -448,13 +598,13 @@ def create_grid_plots(light_curves, results, output_dir, timestamp):
                 idx = regular_indices[i]
                 lc = light_curves[idx]
                 file_name = os.path.basename(results.iloc[idx]['file_path'])
-                title = f"Regular #{i+1}\n{file_name}"
+                title = f"Regular #{i+1}\n{file_name[:-18]}"
                 plot_light_curve(axes_regular[i], lc, title)
             else:
                 axes_regular[i].axis('off')  # Hide unused subplots
 
         plt.tight_layout()
-        regular_grid_file = os.path.join(output_dir, f"regular_grid_{timestamp}.png")
+        regular_grid_file = os.path.join(output_dir, f"regular_grid.png")
         fig_regular.savefig(regular_grid_file, dpi=300)
         plt.close(fig_regular)
         # print(f"Regular grid plot saved to: {regular_grid_file}")
@@ -464,59 +614,24 @@ def create_grid_plots(light_curves, results, output_dir, timestamp):
     print(f"Grid plots created in {time.time() - grid_start_time:.2f} seconds")
     return outlier_grid_file, regular_grid_file
 
-# Track overall execution time
-overall_start_time = time.time()
-
-# Run the analysis and save visualization
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-output_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_analysis_main_{timestamp}.png")
-results = df_analyze_light_curves(light_curves, output_file=output_file)
-
-# Print summary of results
-print("\n" + "="*50)
-print("EXECUTION SUMMARY")
-print("="*50)
-
-
-print(f"Total execution time: {time.time() - overall_start_time:.2f} seconds")
-print(f"Processed {len(light_curves)} light curves")
-print(f"Detected {results['combined_outlier'].sum()} outliers ({results['combined_outlier'].sum()/len(results)*100:.2f}%)")
-print("Top 5 most important features:")
-if 'feature_importance' in results.columns:
-    top_features = results['feature_importance'].iloc[0].head(5)
-    for idx, row in top_features.iterrows():
-        print(f"  - {row['feature']}: {row['importance']:.4f}")
-
-    # Save feature importance to a CSV file
-    importance_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_importance_{timestamp}.csv")
-    results['feature_importance'].iloc[0].to_csv(importance_file, index=False)
-    print(f"Feature importance saved to: {importance_file}")
-else:
-    print("  Feature importance information not available")
-print("="*50)
-
-# Create grid plots of outliers and regular light curves
-outlier_grid_file, regular_grid_file = create_grid_plots(light_curves, results, FEATURE_OUTPUT_DIR, timestamp)
-
-
 # =============================================================================
 # HDBSCAN Clustering Pipeline
 # =============================================================================
 
-def run_umat_clustering(light_curves, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None):
+def run_umap_clustering(light_curves, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None):
     """
-    Run UMAT (Uniform Manifold Approximation and Transformation) for dimensionality reduction
+    Run UMAP (Uniform Manifold Approximation and Transformation) for dimensionality reduction
     and clustering on the statistical features of light curves.
 
     Parameters:
         light_curves (list of pd.DataFrame): List of light curve DataFrames.
-        n_neighbors (int): The number of neighbors to consider for each point in UMAT.
+        n_neighbors (int): The number of neighbors to consider for each point in UMAP.
         min_dist (float): The minimum distance between points in the embedding.
         n_components (int): The number of dimensions in the embedding.
         output_file (str): Path to save the plot (if None, a default name will be used).
 
     Returns:
-        tuple: (cluster_labels, feature_matrix, umat_embedding)
+        tuple: (cluster_labels, feature_matrix, umap_embedding)
     """
     # Import UMAP here to ensure it's available when needed
     # Note: You need to install umap-learn package first: pip install umap-learn
@@ -529,11 +644,11 @@ def run_umat_clustering(light_curves, n_neighbors=15, min_dist=0.1, n_components
         print("conda install -c conda-forge umap-learn")
         return None, None, None
 
-    # For clustering after UMAT reduction
+    # For clustering after UMAP reduction
     from sklearn.cluster import DBSCAN
 
     print("\n" + "="*50)
-    print("STARTING UMAT CLUSTERING PIPELINE")
+    print("STARTING UMAP CLUSTERING PIPELINE")
     print("="*50)
 
     # Track execution time
@@ -541,10 +656,9 @@ def run_umat_clustering(light_curves, n_neighbors=15, min_dist=0.1, n_components
 
     # Create default output filename if none provided
     if output_file is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(UMAT_OUTPUT_DIR, f"umat_clusters_{timestamp}.png")
+        output_file = os.path.join(UMAP_OUTPUT_DIR, f"umap_clusters.png")
 
-def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, output_file=None):
+def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, output_file=None, skip_noise=True, known_light_curves=None):
     """
     Run HDBSCAN clustering on the statistical features of light curves and visualize
     the clusters using PCA.
@@ -554,6 +668,8 @@ def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, o
         min_cluster_size (int): The minimum size of clusters for HDBSCAN.
         min_samples (int): The number of samples in a neighborhood for a point to be considered a core point.
         output_file (str): Path to save the plot (if None, a default name will be used).
+        skip_noise (bool): Whether to skip noise points in visualization.
+        known_light_curves (list): List of file paths for known light curves to highlight.
 
     Returns:
         tuple: (cluster_labels, feature_matrix, pca_result)
@@ -569,17 +685,27 @@ def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, o
 
     # Create default output filename if none provided
     if output_file is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(HDBSCAN_OUTPUT_DIR, f"hdbscan_clusters_{timestamp}.png")
+        if skip_noise:
+            output_file = os.path.join(HDBSCAN_OUTPUT_DIR, f"hdbscan_clusters.png")
+        else:
+            output_file = os.path.join(HDBSCAN_OUTPUT_DIR, f"hdbscan_clusters_with_noise.png")
 
     # Extract statistical features
     print("Extracting statistical features for clustering...")
     features_df = df_process_all_light_curves_error(light_curves)
+    feature_matrix = np.stack(features_df['feature_values'].values, axis=0)
+    feature_names = features_df['feature_names'].values[0]  # All rows have same feature names
 
-    # Prepare feature matrix
-    feature_matrix = np.vstack(features_df['feature_values'].values)
+    # Generate and save correlation matrix
+    print("\nGenerating feature correlation matrix...")
+    correlation_matrix_file = plot_correlation_matrix(
+        feature_matrix,
+        feature_names,
+        os.path.join(HDBSCAN_OUTPUT_DIR, f"feature_correlation_matrix.png")
+    )
+    print(f"Feature correlation matrix saved to: {correlation_matrix_file}")
 
-    # Scale features
+    # Scale the features
     print("Scaling features using RobustScaler...")
     scaler = RobustScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
@@ -619,37 +745,55 @@ def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, o
     unique_labels = set(cluster_labels)
     n_clusters_with_noise = len(unique_labels)
 
-    # Create a colormap
-    cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
+    # Create a colorful palette for better cluster distinction
+    # Use tab20 colormap which provides 20 distinct colors
+    colors = plt.cm.viridis(np.linspace(0, 1, max(3, n_clusters)))
 
     # Plot the clusters
     plt.figure(figsize=(12, 10))
 
-    # Plot each cluster with a different color
-    for label in unique_labels:
-        mask = cluster_labels == label
-        if label == -1:  # Noise points in gray with higher transparency
+    # Plot each cluster separately for better control over colors
+    if skip_noise:
+        # Plot non-noise points
+        for i in range(n_clusters):
+            mask = cluster_labels == i
             plt.scatter(
                 features_2d[mask, 0], features_2d[mask, 1],
-                c='gray', marker='.', label='Noise', alpha=0.2, s=160
+                c=[colors[i]], label=f'Cluster {i}',
+                alpha=0.8, s=50, edgecolors='white', linewidths=0.5
             )
-        else:  # Regular clusters with colors from colormap and higher visibility
+    else:
+        # Include noise points (black)
+        noise_mask = cluster_labels == -1
+        plt.scatter(
+            features_2d[noise_mask, 0], features_2d[noise_mask, 1],
+            c='black', label='Noise', alpha=0.2,
+            s=50, edgecolors='white', linewidths=0.5
+        )
+
+        # Plot non-noise clusters
+        for i in range(n_clusters):
+            mask = cluster_labels == i
             plt.scatter(
                 features_2d[mask, 0], features_2d[mask, 1],
-                c=np.array([cmap(label)]), label=f'Cluster {label}', alpha=0.9, s=60,
-                edgecolors='w', linewidths=0.5
+                c=[colors[i]], label=f'Cluster {i}',
+                alpha=0.8, s=50, edgecolors='white', linewidths=0.5
             )
 
-    plt.xlabel('First Principal Component')
-    plt.ylabel('Second Principal Component')
-    plt.title('HDBSCAN Clustering of Light Curves in 2D Feature Space')
-    plt.legend()
-    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.xlabel('First Principal Component (PC1)')
+    plt.ylabel('Second Principal Component (PC2)')
+    plt.title('HDBSCAN Clustering of Light Curves in 2D Feature Space', pad=20)
 
-    # Add variance explained by PCA components
-    explained_variance = pca.explained_variance_ratio_
-    plt.xlabel(f'PC1 ({explained_variance[0]:.2%} variance)')
-    plt.ylabel(f'PC2 ({explained_variance[1]:.2%} variance)')
+    # Add grid and legend
+    plt.grid(True, linestyle='--', alpha=0.3)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    # Use log scale for both axes
+    plt.xscale('symlog', linthresh=1e-2)
+    plt.yscale('symlog', linthresh=1e-2)
+
+    # Adjust layout to prevent label cutoff
+    plt.tight_layout()
 
     # Save the plot
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
@@ -661,34 +805,34 @@ def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, o
     print(f"HDBSCAN clustering completed in {time.time() - clustering_start_time:.2f} seconds")
     return cluster_labels, feature_matrix, features_2d
 
-# Continue the UMAT function implementation
-def continue_umat_clustering(light_curves, features_df, scaled_features, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5):
+# Continue the UMAP function implementation
+def continue_umap_clustering(light_curves, features_df, scaled_features, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5, skip_noise=True):
     """
-    Continue the UMAT clustering process with the extracted features.
+    Continue the UMAP clustering process with the extracted features.
     This is a helper function to be called after feature extraction.
 
     Parameters:
         light_curves (list): List of light curve DataFrames
         features_df (pd.DataFrame): DataFrame with features
         scaled_features (np.ndarray): Scaled feature matrix
-        n_neighbors (int): Number of neighbors for UMAT
-        min_dist (float): Minimum distance for UMAT
-        n_components (int): Number of components for UMAT
+        n_neighbors (int): Number of neighbors for UMAP
+        min_dist (float): Minimum distance for UMAP
+        n_components (int): Number of components for UMAP
         output_file (str): Output file path
         eps (float): Maximum distance between samples for DBSCAN
         min_samples (int): Minimum samples for DBSCAN
 
     Returns:
-        tuple: (cluster_labels, feature_matrix, umat_embedding)
+        tuple: (cluster_labels, feature_matrix, umap_embedding)
     """
     import umap
     from sklearn.cluster import DBSCAN
 
     # Track execution time
-    umat_start = time.time()
+    umap_start = time.time()
 
-    # Run UMAT for dimensionality reduction
-    print(f"Running UMAT with n_neighbors={n_neighbors}, min_dist={min_dist}...")
+    # Run UMAP for dimensionality reduction
+    print(f"Running UMAP with n_neighbors={n_neighbors}, min_dist={min_dist}...")
     reducer = umap.UMAP(
         n_neighbors=n_neighbors,
         min_dist=min_dist,
@@ -696,14 +840,14 @@ def continue_umat_clustering(light_curves, features_df, scaled_features, n_neigh
         metric='euclidean',
         random_state=42
     )
-    umat_embedding = reducer.fit_transform(scaled_features)
-    print(f"UMAT completed in {time.time() - umat_start:.2f} seconds")
+    umap_embedding = reducer.fit_transform(scaled_features)
+    print(f"UMAP completed in {time.time() - umap_start:.2f} seconds")
 
-    # Run DBSCAN on the UMAT embedding for clustering
-    print(f"Running DBSCAN on UMAT embedding with eps={eps}, min_samples={min_samples}...")
+    # Run DBSCAN on the UMAP embedding for clustering
+    print(f"Running DBSCAN on UMAP embedding with eps={eps}, min_samples={min_samples}...")
     dbscan_start = time.time()
     dbscan = DBSCAN(eps=eps, min_samples=min_samples)
-    cluster_labels = dbscan.fit_predict(umat_embedding)
+    cluster_labels = dbscan.fit_predict(umap_embedding)
     print(f"DBSCAN completed in {time.time() - dbscan_start:.2f} seconds")
 
     # Get cluster statistics
@@ -724,7 +868,7 @@ def continue_umat_clustering(light_curves, features_df, scaled_features, n_neigh
     n_clusters_with_noise = len(unique_labels)
 
     # Create a colormap
-    cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
+    cmap = plt.get_cmap('viridis', max(3, n_clusters))
 
     # Plot the clusters
     plt.figure(figsize=(12, 10))
@@ -733,20 +877,23 @@ def continue_umat_clustering(light_curves, features_df, scaled_features, n_neigh
     for label in unique_labels:
         mask = cluster_labels == label
         if label == -1:  # Noise points in gray with higher transparency
-            plt.scatter(
-                umat_embedding[mask, 0], umat_embedding[mask, 1],
-                c='gray', marker='.', label='Noise', alpha=0.2, s=160
-            )
+            if not skip_noise:
+                plt.scatter(
+                    umap_embedding[mask, 0], umap_embedding[mask, 1],
+                    c='gray', marker='.', label='Noise', alpha=0.2, s=160
+                )
         else:  # Regular clusters with colors from colormap and higher visibility
             plt.scatter(
-                umat_embedding[mask, 0], umat_embedding[mask, 1],
+                umap_embedding[mask, 0], umap_embedding[mask, 1],
                 c=np.array([cmap(label)]), label=f'Cluster {label}', alpha=0.9, s=60,
                 edgecolors='w', linewidths=0.5
             )
 
-    plt.xlabel('UMAT Dimension 1')
-    plt.ylabel('UMAT Dimension 2')
-    plt.title('UMAT+DBSCAN Clustering of Light Curves')
+    plt.xlabel('UMAP Dimension 1')
+    plt.ylabel('UMAP Dimension 2')
+    plt.title('UMAP+DBSCAN Clustering of Light Curves')
+    plt.xscale('symlog', linthresh=1e-2)
+    plt.yscale('symlog', linthresh=1e-2)
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
 
@@ -757,9 +904,9 @@ def continue_umat_clustering(light_curves, features_df, scaled_features, n_neigh
     # Show the plot
     plt.show()
 
-    return cluster_labels, scaled_features, umat_embedding
+    return cluster_labels, scaled_features, umap_embedding
 
-def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5):
+def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5, skip_noise=True):
     """
     Complete UMAP clustering pipeline, from feature extraction to visualization.
 
@@ -773,12 +920,12 @@ def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_c
         min_samples (int): Minimum samples for DBSCAN
 
     Returns:
-        tuple: (cluster_labels, feature_matrix, umat_embedding)
+        tuple: (cluster_labels, feature_matrix, umap_embedding)
     """
     # Create default output filename if none provided
     if output_file is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(UMAT_OUTPUT_DIR, f"umat_clusters_{timestamp}.png")
+        output_file = os.path.join(UMAP_OUTPUT_DIR, f"umap_clusters.png")
 
     clustering_start_time = time.time()
 
@@ -794,15 +941,15 @@ def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_c
     scaler = RobustScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
 
-    # Run the UMAT clustering
-    cluster_labels, _, umat_embedding = continue_umat_clustering(
+    # Run the UMAP clustering
+    cluster_labels, _, umap_embedding = continue_umap_clustering(
         light_curves, features_df, scaled_features,
         n_neighbors=n_neighbors, min_dist=min_dist, n_components=n_components,
-        output_file=output_file, eps=eps, min_samples=min_samples
+        output_file=output_file, eps=eps, min_samples=min_samples, skip_noise=skip_noise
     )
 
-    print(f"UMAT clustering completed in {time.time() - clustering_start_time:.2f} seconds")
-    return cluster_labels, feature_matrix, umat_embedding
+    print(f"UMAP clustering completed in {time.time() - clustering_start_time:.2f} seconds")
+    return cluster_labels, feature_matrix, umap_embedding
 
 def plot_cluster_samples(light_curves, features_df, cluster_labels, output_dir, timestamp):
     """
@@ -834,7 +981,7 @@ def plot_cluster_samples(light_curves, features_df, cluster_labels, output_dir, 
 
     # Define a colormap for consistency with the main plot
     n_clusters = len(unique_clusters)
-    cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
+    cmap = plt.get_cmap('viridis', max(3, n_clusters))
 
     # Process each cluster (including noise)
     for cluster_label in all_cluster_labels:
@@ -902,7 +1049,7 @@ def plot_cluster_samples(light_curves, features_df, cluster_labels, output_dir, 
         plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust layout to make room for suptitle
 
         # Save the plot
-        cluster_file = os.path.join(cluster_plots_dir, f"{cluster_name}_samples_{timestamp}.png")
+        cluster_file = os.path.join(cluster_plots_dir, f"{cluster_name}_samples.png")
         fig.savefig(cluster_file, dpi=300, bbox_inches='tight')
         plt.close(fig)
 
@@ -928,7 +1075,10 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
     # Create default output filename if none provided
     if output_file is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_corner_plot_{timestamp}.png")
+        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"corner_plot.png")
+
+    # Get the output directory from the output file path
+    output_dir = os.path.dirname(output_file)
 
     # Create a DataFrame with the features and cluster labels
     df_features = pd.DataFrame(feature_matrix, columns=feature_names)
@@ -937,30 +1087,35 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
     # Convert cluster labels to string for better visualization
     df_features['cluster'] = df_features['cluster'].apply(lambda x: f'Cluster {x}' if x >= 0 else 'Noise')
 
-    # Create a custom palette where noise points are gray
-    unique_clusters = df_features['cluster'].unique()
-    n_clusters = len([c for c in unique_clusters if c != 'Noise'])
+    # Filter out noise points
+    df_features_no_noise = df_features[df_features['cluster'] != 'Noise']
+
+    # If after filtering there's no data, use the original dataframe
+    if len(df_features_no_noise) == 0:
+        print("Warning: All points were classified as noise. Showing all data points.")
+        df_features_filtered = df_features
+    else:
+        df_features_filtered = df_features_no_noise
+        print(f"Removed {len(df_features) - len(df_features_filtered)} noise points from the pairplot.")
+
+    # Create a custom palette for the clusters (excluding noise)
+    unique_clusters = df_features_filtered['cluster'].unique()
+    n_clusters = len(unique_clusters)
 
     # Create a colormap for the clusters
-    cluster_colors = plt.cm.get_cmap('viridis', max(3, n_clusters))
+    cluster_colors = plt.get_cmap('viridis', max(3, n_clusters))
     palette = {}
 
     # Assign colors to clusters
-    cluster_idx = 0
-    for cluster in unique_clusters:
-        if cluster == 'Noise':
-            palette[cluster] = 'gray'
-        else:
-            palette[cluster] = cluster_colors(cluster_idx)
-            cluster_idx += 1
+    for i, cluster in enumerate(unique_clusters):
+        palette[cluster] = cluster_colors(i)
 
     # Create the corner plot
-    print("Creating corner plot of features colored by clusters...")
-    plt.figure(figsize=(15, 15))
+    print("Creating corner plot of features colored by clusters (excluding noise)...")
 
     # Create the pairplot with cluster coloring
     corner_plot = sns.pairplot(
-        df_features,
+        df_features_filtered,
         hue='cluster',
         palette=palette,
         plot_kws={'alpha': 0.7, 's': 30, 'edgecolor': 'none'},
@@ -968,8 +1123,14 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
         corner=True,  # False - full pairplot, True - corner plot
     )
 
-    # Adjust the plot
-    corner_plot.fig.suptitle('Feature Relationships by Cluster', fontsize=24, y=1.02)
+    # Set log scale for all axes
+    for ax in corner_plot.axes.flatten():
+        if ax is not None:
+            ax.set_xscale('symlog', linthresh=1e-2)
+            ax.set_yscale('symlog', linthresh=1e-2)
+
+    # Add a main title for the entire figure
+    corner_plot.fig.suptitle('Feature Relationships by Cluster (Noise Excluded)', fontsize=24, y=1.02)
 
     # Save the plot
     corner_plot.savefig(output_file, dpi=300, bbox_inches='tight')
@@ -977,13 +1138,162 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
 
     return output_file
 
+def analyze_cluster_feature_importance(feature_matrix, feature_names, cluster_labels, output_dir=None):
+    """
+    Analyze which features are most important for distinguishing each cluster.
+
+    Parameters:
+        feature_matrix (np.ndarray): Matrix of features where each row is a light curve and each column is a feature
+        feature_names (list): List of feature names corresponding to the columns in feature_matrix
+        cluster_labels (np.ndarray): Cluster labels from clustering algorithm
+        output_dir (str): Directory to save the output plots and text file
+
+    Returns:
+        dict: Dictionary mapping cluster names to DataFrames containing feature importance scores
+    """
+    # Set default output directory if none provided
+    if output_dir is None:
+        output_dir = HDBSCAN_OUTPUT_DIR
+
+    # Create a DataFrame with features and cluster labels
+    df = pd.DataFrame(feature_matrix, columns=feature_names)
+
+    # Convert cluster labels to string format
+    cluster_str_labels = np.array([f'Cluster {x}' if x >= 0 else 'Noise' for x in cluster_labels])
+    df['cluster'] = cluster_str_labels
+
+    # Get unique clusters (excluding noise)
+    unique_clusters = [c for c in df['cluster'].unique() if c != 'Noise']
+
+    if len(unique_clusters) <= 1:
+        print("Not enough clusters to perform feature importance analysis.")
+        return None
+
+    # Dictionary to store feature importance for each cluster
+    cluster_importance = {}
+
+    # For each cluster, calculate how its feature distributions differ from other clusters
+    for cluster in unique_clusters:
+        # Create binary classification: this cluster vs all other clusters (excluding noise)
+        cluster_mask = df['cluster'] == cluster
+        other_mask = (df['cluster'] != cluster) & (df['cluster'] != 'Noise')
+
+        # Skip if either group is too small
+        if cluster_mask.sum() < 5 or other_mask.sum() < 5:
+            continue
+
+        # Calculate feature importance based on distribution differences
+        importance_scores = []
+
+        for feature in feature_names:
+            # Get feature values for this cluster and other clusters
+            cluster_values = df.loc[cluster_mask, feature].values
+            other_values = df.loc[other_mask, feature].values
+
+            # Calculate mean and std for both groups
+            cluster_mean = np.mean(cluster_values)
+            other_mean = np.mean(other_values)
+
+            # Calculate pooled standard deviation
+            n1 = len(cluster_values)
+            n2 = len(other_values)
+            s1 = np.std(cluster_values, ddof=1)
+            s2 = np.std(other_values, ddof=1)
+
+            # Avoid division by zero
+            if s1 == 0 and s2 == 0:
+                effect_size = 0
+            else:
+                # Calculate Cohen's d effect size
+                pooled_std = np.sqrt(((n1-1)*(s1**2) + (n2-1)*(s2**2)) / (n1+n2-2))
+                effect_size = abs(cluster_mean - other_mean) / (pooled_std if pooled_std > 0 else 1)
+
+            importance_scores.append({
+                'feature': feature,
+                'effect_size': effect_size,
+                'cluster_mean': cluster_mean,
+                'other_mean': other_mean,
+                'percent_difference': abs(cluster_mean - other_mean) / (abs(other_mean) if other_mean != 0 else 1) * 100
+            })
+
+        # Convert to DataFrame and sort by importance
+        importance_df = pd.DataFrame(importance_scores)
+        importance_df = importance_df.sort_values('effect_size', ascending=False)
+
+        # Calculate relative importance as percentage
+        total_effect = importance_df['effect_size'].sum()
+        if total_effect > 0:
+            importance_df['importance_percent'] = (importance_df['effect_size'] / total_effect * 100).round(2)
+        else:
+            importance_df['importance_percent'] = 0
+
+        cluster_importance[cluster] = importance_df
+
+    # Create visualizations
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Save to text file
+    text_output_file = os.path.join(output_dir, f"cluster_feature_importance.txt")
+    with open(text_output_file, 'w') as f:
+        f.write("Summary of feature importance for each cluster:\n")
+        f.write("="*50 + "\n\n")
+
+        if cluster_importance:
+            for cluster, importance_df in cluster_importance.items():
+                f.write(f"{cluster} is distinguished by:\n")
+                for _, row in importance_df.head(5).iterrows():
+                    f.write(f"  - {row['feature']}: {row['importance_percent']:.1f}% importance\n")
+                f.write("\n")
+        else:
+            f.write("No significant cluster feature importance found.\n")
+
+    print(f"Cluster feature importance saved to text file: {text_output_file}")
+
+    # Create a summary plot showing top features for each cluster
+    if cluster_importance:
+        plt.figure(figsize=(12, 8))
+
+        # Number of top features to show
+        n_top_features = min(5, len(feature_names))
+
+        # For each cluster, plot the top features
+        for i, (cluster, importance_df) in enumerate(cluster_importance.items()):
+            plt.subplot(len(cluster_importance), 1, i+1)
+
+            # Get top features
+            top_features = importance_df.head(n_top_features)
+
+            # Create horizontal bar chart
+            bars = plt.barh(top_features['feature'], top_features['importance_percent'],
+                           color=plt.get_cmap('viridis')(i/max(1, len(cluster_importance)-1)))
+
+            # Add percentage labels
+            for bar, value in zip(bars, top_features['importance_percent']):
+                plt.text(bar.get_width() + 1, bar.get_y() + bar.get_height()/2,
+                         f"{value:.1f}%", va='center')
+
+            plt.title(f"{cluster} - Top Distinguishing Features")
+            plt.xlabel("Relative Importance (%)")
+            plt.xlim(0, 100)
+            plt.tight_layout()
+
+        # Save the plot
+        plot_output_file = os.path.join(output_dir, f"cluster_feature_importance.png")
+        plt.tight_layout()
+        plt.savefig(plot_output_file, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print(f"Cluster feature importance visualization saved to: {plot_output_file}")
+
+    return cluster_importance
+
 def plot_correlation_matrix(feature_matrix, feature_names, output_file=None):
     """
     Create and visualize a correlation matrix for the extracted features.
 
     Parameters:
         feature_matrix (np.ndarray): Matrix of feature values (rows=samples, columns=features)
-        feature_names (list): List of feature names corresponding to columns in feature_matrix
+        feature_names (list): List of feature names corresponding to the columns in feature_matrix
         output_file (str): Path to save the plot (if None, a default name will be used)
 
     Returns:
@@ -1016,89 +1326,352 @@ def plot_correlation_matrix(feature_matrix, feature_names, output_file=None):
 
     # Save the plot
     if output_file is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_correlation_matrix_{timestamp}.png")
+        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"correlation_matrix.png")
 
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
     print(f"Correlation matrix saved to: {output_file}")
 
     return output_file
 
-# Run the HDBSCAN clustering pipeline
-print("\n" + "="*50)
-print("RUNNING HDBSCAN CLUSTERING")
-print("="*50)
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-hdbscan_output_file = os.path.join(HDBSCAN_OUTPUT_DIR, f"hdbscan_clusters_{timestamp}.png")
 
-# Run HDBSCAN with default parameters
-cluster_labels, feature_matrix, pca_result = run_hdbscan_clustering(
-    light_curves,
-    min_cluster_size=10,  # Adjust based on dataset size
-    output_file=hdbscan_output_file
-)
+# print(light_curves[0])
+# print(light_curves[0].iloc[0])
+# # print(light_curves[0].attrs['file_path'])
+# print(light_curves[0].iloc[0].attrs)
+# print(light_curves[0].iloc[0].attrs['FILE_NAME'])
 
-# Create a corner plot of features colored by clusters
-feature_names = [
-    "weighted_mean", "weighted_variance", "median", "iqr", "beyond_1_sigma",
-    "mad", "max_amp", "flux_percentile_ratio"
-]
-corner_plot_file = plot_feature_corner_plot(
-    feature_matrix,
-    feature_names,
-    cluster_labels,
-    os.path.join(HDBSCAN_OUTPUT_DIR, f"feature_corner_plot_{timestamp}.png")
-)
-print(f"Feature corner plot saved to: {corner_plot_file}")
+# Find cluster assignments for specified light curves
+# sampled_paths = [os.path.basename(file_path) for file_path in [light_curves[0].iloc[i].attrs['FILE_NAME'] for i in range(len(light_curves[0])//2)]]
 
-# Create a correlation matrix for all features
-correlation_matrix_file = plot_correlation_matrix(
-    feature_matrix,
-    feature_names,
-    os.path.join(FEATURE_OUTPUT_DIR, f"feature_correlation_matrix_{timestamp}.png")
-)
-print(f"Feature correlation matrix saved to: {correlation_matrix_file}")
+# =============================================================================
+# Cluster Assignments Pipeline
+# =============================================================================
 
-# Run the UMAT clustering pipeline
-print("\n" + "="*50)
-print("RUNNING UMAP CLUSTERING")
-print("="*50)
-umat_output_file = os.path.join(UMAT_OUTPUT_DIR, f"umap_clusters_{timestamp}.png")
+def get_cluster_assignments(file_paths, features_df, cluster_labels):
+    """
+    Look up cluster assignments for specific light curves.
 
-# Run UMAT with default parameters
-# Note: This will only run if umap-learn is installed
-try:
-    umat_cluster_labels, umat_feature_matrix, umat_embedding = run_umap_clustering_complete(
+    Parameters:
+        file_paths (list): List of file paths to look up
+        features_df (pd.DataFrame): DataFrame containing the features and file paths
+        cluster_labels (np.ndarray): Array of cluster labels from HDBSCAN
+
+    Returns:
+        dict: Dictionary mapping file paths to their cluster assignments
+    """
+    # Create a mapping of file paths to cluster labels
+    file_to_cluster = {}
+
+    # Get the file paths from the features DataFrame
+    all_file_paths = features_df['file_path'].values
+    # print(f"len all_file_paths: {len(all_file_paths)}")
+    # for i in all_file_paths:
+    #     print(i)
+    print(f'sampled paths: {file_paths}')
+    print(f'len sampled paths: {len(file_paths)}')
+    print(f'len all_file_paths: {len(all_file_paths)}')
+
+    for path in file_paths:
+        # Find the index of this file path in the features DataFrame
+        try:
+            idx = np.where(all_file_paths == path)[0][0]
+            file_to_cluster[path] = cluster_labels[idx]
+        except IndexError:
+            file_to_cluster[path] = None  # File not found in dataset
+
+    return file_to_cluster
+
+def plot_significant_curves_with_cluster(significant_curves, light_curves, features_df, cluster_labels, output_dir):
+    """
+    For each significant light curve, create a plot showing it alongside other members of its cluster.
+
+    Parameters:
+        significant_curves (list): List of file paths for significant light curves
+        light_curves (list): List of all light curve DataFrames
+        features_df (pd.DataFrame): DataFrame with features and file paths
+        cluster_labels (np.ndarray): Cluster labels from HDBSCAN
+        output_dir (str): Directory to save the plots
+    """
+    # First, get cluster assignments for significant curves
+    sig_curve_clusters = get_cluster_assignments(significant_curves, features_df, cluster_labels)
+
+    # Create output directory for these specific plots
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    sig_plots_dir = os.path.join(output_dir, f"significant_curves")
+    os.makedirs(sig_plots_dir, exist_ok=True)
+
+    # Process each significant curve
+    for sig_curve in significant_curves:
+        cluster_num = sig_curve_clusters[sig_curve]
+        if cluster_num is None:
+            print(f"Warning: {sig_curve} not found in dataset")
+            continue
+
+        # Get all curves in this cluster
+        cluster_mask = cluster_labels == cluster_num
+        cluster_files = features_df.loc[cluster_mask, 'file_path'].values
+
+        # Remove the significant curve from the pool
+        other_curves = [f for f in cluster_files if f != sig_curve]
+
+        # Randomly sample additional curves (up to 9 more for a total of 10)
+        sample_size = min(9, len(other_curves))
+        if sample_size > 0:
+            sampled_curves = np.random.choice(other_curves, size=sample_size, replace=False)
+            plot_curves = [sig_curve] + list(sampled_curves)
+        else:
+            plot_curves = [sig_curve]
+
+        # Create the plot
+        fig = plt.figure(figsize=(15, 10))
+
+        for idx, curve_file in enumerate(plot_curves, 1):
+            # Find the light curve data
+            curve_idx = features_df[features_df['file_path'] == curve_file].index[0]
+            lc = light_curves[curve_idx]
+
+            ax = plt.subplot(2, 5, idx)
+
+            # Plot the light curve
+            time = lc['TIME'].values
+            flux = lc['RATE'].values
+            err_low = lc['ERRM'].values
+            err_high = lc['ERRP'].values
+
+            # Normalize time to start at 0
+            time = time - time[0]
+
+            ax.errorbar(time, flux, yerr=[err_low, err_high], fmt='k.', markersize=1, alpha=0.5)
+
+            # Highlight the significant curve
+            title = os.path.basename(curve_file)
+            if curve_file == sig_curve:
+                ax.set_title(title, color='red')
+            else:
+                ax.set_title(title)
+
+            ax.set_xlabel('Time (s)')
+            ax.set_ylabel('Rate')
+            ax.grid(True, alpha=0.3)
+
+        plt.suptitle(f'Significant Curve and Cluster {cluster_num} Members', fontsize=16)
+        plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+        # Save the plot
+        plot_file = os.path.join(sig_plots_dir, f"significant_curve_{os.path.basename(sig_curve)}_cluster_{cluster_num}.png")
+        plt.savefig(plot_file, dpi=300, bbox_inches='tight')
+        plt.close(fig)
+
+        print(f"Created plot for significant curve {sig_curve} (Cluster {cluster_num})")
+
+    return sig_plots_dir
+
+if __name__ == "__main__":
+
+    # known interesting light curves
+    known_light_curves = ["em01_211120_020_LightCurve_00007_c010_rebinned.fits",
+                          "em01_039135_020_LightCurve_00058_c010_rebinned.fits",
+                          "em01_038099_020_LightCurve_00005_c010_rebinned.fits"]
+
+    # File Loading Pipeline
+    size = 5001
+    # Create output directory for plots if it doesn't exist
+    FILE_DIR = '/home/pdong/Astro UROP/plots/feature_extraction_plots_test' + f"/{size}"
+    # Create directories for both HDBSCAN and UMAP outputs
+    FEATURE_OUTPUT_DIR = FILE_DIR + "/FEATURES"
+    HDBSCAN_OUTPUT_DIR = FILE_DIR + "/HDBSCAN"
+    UMAP_OUTPUT_DIR = FILE_DIR + "/UMAP"
+    OUTPUT_DIR = HDBSCAN_OUTPUT_DIR  # Default to HDBSCAN for backward compatibility
+    os.makedirs(HDBSCAN_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(UMAP_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(FEATURE_OUTPUT_DIR, exist_ok=True)
+
+    print("Starting feature extraction process...")
+    print("Loading FITS files...")
+    start_time = time.time()
+    fits_files = load_all_fits_files()
+    print(f"Loaded {len(fits_files)} FITS files in {time.time() - start_time:.2f} seconds")
+
+    # light_curve_file = os.path.join(FILE_DIR, "fits_files.txt")
+
+    # with open(light_curve_file, "w") as f:
+    #     f.write(f"Size of fits files loaded: {len(fits_files)}\n")
+    #     for file_path in fits_files:
+    #         f.write(f"{file_path}\n")
+
+
+    print("Loading light curves...")
+    start_time = time.time()
+    light_curves = load_n_light_curves(size, fits_files, band = "med")
+    print(f"Loaded {len(light_curves)} light curves in {time.time() - start_time:.2f} seconds")
+
+
+    # light_curve_file2 = os.path.join(FILE_DIR, "light_curves.txt")
+
+    # with open(light_curve_file2, "w") as f:
+    #     f.write(f"Size of light Curves loaded: {len(light_curves)}\n")
+    #     for lc in light_curves:
+    #         f.write(f"{lc.iloc[0].attrs['FILE_NAME']}\n")
+
+    print("\n" + "="*50)
+    print("STARTING MAIN EXECUTION")
+    print("="*50)
+
+
+    print("Writing example of features:")
+    extract_features_from_lc(light_curves[0], output_file=FEATURE_OUTPUT_DIR)
+
+    # Track overall execution time
+    overall_start_time = time.time()
+
+    # Run the analysis and save visualization
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = os.path.join(FEATURE_OUTPUT_DIR, f"main_analysis.png")
+    results = df_analyze_light_curves(light_curves, output_file=output_file)
+
+    # Print summary of results
+    print("\n" + "="*50)
+    print("EXECUTION SUMMARY")
+    print("="*50)
+
+
+    print(f"Total execution time: {time.time() - overall_start_time:.2f} seconds")
+    print(f"Processed {len(light_curves)} light curves")
+    print(f"Detected {results['combined_outlier'].sum()} outliers ({results['combined_outlier'].sum()/len(results)*100:.2f}%)")
+    # print("Top 5 most important features:")
+    # if 'feature_importance' in results.columns:
+    #     top_features = results['feature_importance'].iloc[0].head(5)
+    #     for idx, row in top_features.iterrows():
+    #         print(f"  - {row['feature']}: {row['importance']:.4f}")
+
+    #     # Save feature importance to a CSV file
+    #     importance_file = os.path.join(FEATURE_OUTPUT_DIR, f"feature_importance_{timestamp}.csv")
+    #     results['feature_importance'].iloc[0].to_csv(importance_file, index=False)
+    #     print(f"Feature importance saved to: {importance_file}")
+    # else:
+    #     print("  Feature importance information not available")
+    print("="*50)
+
+    # Create grid plots of outliers and regular light curves
+    outlier_grid_file, regular_grid_file = create_grid_plots(light_curves, results, FEATURE_OUTPUT_DIR, timestamp)
+
+    # Run the HDBSCAN clustering pipeline
+    print("\n" + "="*50)
+    print("RUNNING HDBSCAN CLUSTERING")
+    print("="*50)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Run HDBSCAN with default parameters
+    cluster_labels, feature_matrix, pca_result = run_hdbscan_clustering(
         light_curves,
-        n_neighbors=15,
-        min_dist=0.1,
-        output_file=umat_output_file,
-        eps=0.5,
-        min_samples=5
+        min_cluster_size=10,  # Adjust based on dataset size
+        skip_noise=False,
+        known_light_curves=known_light_curves
     )
-    umat_success = True
-except ImportError:
-    print("UMAP clustering skipped - umap-learn package not installed")
-    print("To install, run: pip install umap-learn")
-    umat_success = False
 
-# Generate sample plots for each cluster
-features_df = df_process_all_light_curves_error(light_curves)
+    # Create a corner plot of features colored by clusters
+    feature_names = [
+        "weighted_mean", "weighted_variance", "median", "iqr",
+        "mad", "max_amp", "flux_percentile_ratio", "lag1_autocorr", "hurst_exp",
+        "mean_rise_fall_ratio"
+    ]
+    corner_plot_file = plot_feature_corner_plot(
+        feature_matrix,
+        feature_names,
+        cluster_labels,
+        os.path.join(HDBSCAN_OUTPUT_DIR, f"feature_corner_plot_{timestamp}.png")
+    )
+    print(f"Feature corner plot saved to: {corner_plot_file}")
 
-# Plot HDBSCAN cluster samples
-hdbscan_samples_dir = plot_cluster_samples(light_curves, features_df, cluster_labels, HDBSCAN_OUTPUT_DIR, timestamp)
-print(f"\nHDBSCAN cluster sample plots saved to: {hdbscan_samples_dir}")
+    # Create sample plots for each HDBSCAN cluster
+    print("\nCreating sample plots for each HDBSCAN cluster...")
+    features_df = pd.DataFrame({
+        "file_path": [lc.attrs['FILE_NAME'] for lc in light_curves],
+    })
+    hdbscan_cluster_samples_dir = plot_cluster_samples(
+        light_curves,
+        features_df,
+        cluster_labels,
+        HDBSCAN_OUTPUT_DIR,
+        timestamp
+    )
+    print(f"HDBSCAN cluster sample plots saved to: {hdbscan_cluster_samples_dir}")
 
-# Plot UMAT cluster samples if UMAT was run successfully
-if 'umat_success' in locals() and umat_success:
-    umat_samples_dir = plot_cluster_samples(light_curves, features_df, umat_cluster_labels, UMAT_OUTPUT_DIR, timestamp)
-    print(f"\nUMAP cluster sample plots saved to: {umat_samples_dir}")
+    # Print summary of cluster feature importance
+    print("\nSummary of feature importance for each cluster:")
+    cluster_importance = analyze_cluster_feature_importance(feature_matrix, feature_names, cluster_labels, HDBSCAN_OUTPUT_DIR)
+    if cluster_importance:
+        for cluster, importance_df in cluster_importance.items():
+            print(f"\n{cluster} is distinguished by:")
+            for _, row in importance_df.head(3).iterrows():
+                print(f"  - {row['feature']}: {row['importance_percent']:.1f}% importance")
+
+    # Run the UMAP clustering pipeline
+    print("\n" + "="*50)
+    print("RUNNING UMAP CLUSTERING")
+    print("="*50)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Run UMAP with default parameters
+    umap_cluster_labels, umap_feature_matrix, umap_embedding = run_umap_clustering_complete(
+    light_curves,
+    n_neighbors=15,
+    min_dist=0.1,
+        n_components=2,
+        eps=0.5,
+        min_samples=5,
+        skip_noise=True
+    )
 
     # Create a corner plot of features colored by UMAP clusters
     umap_corner_plot_file = plot_feature_corner_plot(
-        umat_feature_matrix,
+        umap_feature_matrix,
         feature_names,
-        umat_cluster_labels,
-        os.path.join(UMAT_OUTPUT_DIR, f"umap_feature_corner_plot_{timestamp}.png")
+        umap_cluster_labels,
+        os.path.join(UMAP_OUTPUT_DIR, f"umap_feature_corner_plot.png")
     )
     print(f"UMAP feature corner plot saved to: {umap_corner_plot_file}")
+
+    # Create sample plots for each UMAP cluster
+    print("\nCreating sample plots for each UMAP cluster...")
+    umap_cluster_samples_dir = plot_cluster_samples(
+        light_curves,
+        features_df,
+        umap_cluster_labels,
+        UMAP_OUTPUT_DIR,
+        timestamp
+    )
+    print(f"UMAP cluster sample plots saved to: {umap_cluster_samples_dir}")
+
+    # Print summary of UMAP cluster feature importance
+    print("\nSummary of feature importance for UMAP clusters:")
+    umap_cluster_importance = analyze_cluster_feature_importance(umap_feature_matrix, feature_names, umap_cluster_labels, UMAP_OUTPUT_DIR)
+    if umap_cluster_importance:
+        for cluster, importance_df in umap_cluster_importance.items():
+            print(f"\n{cluster} is distinguished by:")
+            for _, row in importance_df.head(3).iterrows():
+                print(f"  - {row['feature']}: {row['importance_percent']:.1f}% importance")
+
+    # Run cluster assignments pipeline
+
+    # Write the results
+    output_file = os.path.join(FEATURE_OUTPUT_DIR, "cluster_assignments.txt")
+
+    with open(output_file, "w") as f:
+        for file_path, cluster in get_cluster_assignments(known_light_curves, features_df, cluster_labels).items():
+            if cluster is not None:
+                print(f"Light curve {file_path} belongs to cluster {cluster}")
+                f.write(f"Light curve {file_path} belongs to cluster {cluster}\n")
+            else:
+                print(f"Light curve {file_path} was not found in the dataset")
+                f.write(f"Light curve {file_path} was not found in the dataset\n")
+
+    significant_clusters_dir = plot_significant_curves_with_cluster(
+        known_light_curves,
+        light_curves,
+        features_df,
+        cluster_labels,
+        FEATURE_OUTPUT_DIR
+    )
+
+    print("Finished feature extraction and analysis.")

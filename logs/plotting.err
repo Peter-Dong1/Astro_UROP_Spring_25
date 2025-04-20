@@ -1,7 +1,15 @@
-/home/pdong/Astro UROP/test_rnn.py:112: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+slurmstepd: error: *** JOB 65049599 ON node2906 CANCELLED AT 2025-04-10T00:56:54 DUE TO TIME LIMIT ***
+/home/pdong/Astro UROP/test_rnn.py:852: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
   model.load_state_dict(torch.load(model_dir))
+/home/pdong/Astro UROP/test_rnn.py:681: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
+  cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
 Traceback (most recent call last):
-  File "/home/pdong/Astro UROP/test_rnn.py", line 147, in <module>
-    for batch_idx, (x, lengths) in enumerate(test_loader):
-                                             ^^^^^^^^^^^
-NameError: name 'test_loader' is not defined
+  File "/home/pdong/Astro UROP/test_rnn.py", line 902, in <module>
+    main()
+  File "/home/pdong/Astro UROP/test_rnn.py", line 889, in main
+    cluster_samples_dir = plot_cluster_samples_rnn(model, test_loader, cluster_labels_pca, plot_dir, model_str)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pdong/Astro UROP/test_rnn.py", line 693, in plot_cluster_samples_rnn
+    all_data = torch.cat(all_data, dim=0)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Sizes of tensors must match except in dimension 0. Expected size 20 but got size 19 for tensor number 253 in the list.

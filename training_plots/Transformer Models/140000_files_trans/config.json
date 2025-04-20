@@ -1,0 +1,18 @@
+{
+    "learning_rate": 1e-05,
+    "architecture": "TransformerVAE",
+    "dataset": "3 LCs",
+    "data_size": 100000,
+    "epochs": 1500,
+    "latent_size": 40,
+    "d_model": 256,
+    "nhead": 4,
+    "num_encoder_layers": 2,
+    "hidden_size": 256,
+    "num_decoder_blocks": 3,
+    "dropout": 0.1,
+    "KLD_coef": 0.0035,
+    "input_size": 9,
+    "output_size": 1,
+    "batch_size": 32
+}

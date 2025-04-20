@@ -21,10 +21,10 @@ from RNN_9_model import ELBO, Poisson_NLL, RNN_VAE, Decoder, Encoder, collate_fn
 import wandb
 import json
 
-new_model_str = "30000_files_RNN"
+new_model_str = "140000_files_RNN"
 learning_rate = 1e-5
-data_size = 30000
-num_epochs = 3000
+data_size = 1400000
+num_epochs = 1200
 latent_size = 32
 KLD_coef = 0.0035
 hidden_size = 512
@@ -62,7 +62,7 @@ def save_config(config, save_path):
 
 wandb.init(
     # set the wandb project where this run will be logged
-    project="RNN_BIG",
+    project=new_model_str,
 
     # track hyperparameters and run metadata
     config=hyperparams

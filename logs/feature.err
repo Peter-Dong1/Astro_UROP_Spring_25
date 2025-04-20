@@ -1,18 +1,9 @@
-/home/pdong/Astro UROP/feature_extraction.py:623: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
-  cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
-/home/pdong/Astro UROP/feature_extraction.py:655: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
-  plt.savefig(output_file, dpi=300, bbox_inches='tight')
-/home/pdong/Astro UROP/feature_extraction.py:945: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
-  cluster_colors = plt.cm.get_cmap('viridis', max(3, n_clusters))
+slurmstepd: error: *** JOB 65251179 ON node332 CANCELLED AT 2025-04-19T21:06:18 ***
 /home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/umap/umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
   warn(
-/home/pdong/.conda/envs/myenv/lib/python3.11/site-packages/sklearn/manifold/_spectral_embedding.py:329: UserWarning: Graph is not fully connected, spectral embedding may not work as expected.
-  warnings.warn(
-/home/pdong/Astro UROP/feature_extraction.py:727: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
-  cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
-/home/pdong/Astro UROP/feature_extraction.py:754: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+/home/pdong/Astro UROP/feature_extraction.py:902: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
   plt.savefig(output_file, dpi=300, bbox_inches='tight')
-/home/pdong/Astro UROP/feature_extraction.py:837: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
-  cmap = plt.cm.get_cmap('viridis', max(3, n_clusters))
-/home/pdong/Astro UROP/feature_extraction.py:945: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
-  cluster_colors = plt.cm.get_cmap('viridis', max(3, n_clusters))
+/home/pdong/Astro UROP/feature_extraction.py:1279: UserWarning: Tight layout not applied. tight_layout cannot make Axes height small enough to accommodate all Axes decorations.
+  plt.tight_layout()
+/home/pdong/Astro UROP/feature_extraction.py:1283: UserWarning: Tight layout not applied. tight_layout cannot make Axes height small enough to accommodate all Axes decorations.
+  plt.tight_layout()

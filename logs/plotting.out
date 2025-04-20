@@ -1,17 +1,32 @@
+Start Running File
+model_str = 30000_files_RNN
 Config loaded from /home/pdong/Astro UROP/training_plots/RNN Models/30000_files_RNN/config.json
-Config saved to /home/pdong/Astro UROP/plots/RNN Models/30000_files_RNN/10/config.json
+Config saved to /home/pdong/Astro UROP/plots/RNN plots/30000_files_RNN/190000/config.json
 Torch Diagnostics
 Available: True
 Version: 2.5.1, 12.4
 Start Loading Files ...
 Loaded Files Complete
-Start Loading 10 Light Curves ...
+Start Loading 190000 Light Curves ...
 starting 1st band
 starting 2nd band
 starting 3rd band
 finished loading all bands
-Loading Light Curves Complete. Length: 10
-Start Partitioning Data ...
-Partitioning Complete
+Loading Light Curves Complete. Length: 189999
 Finished Loading LCs
 Starting to use model
+Extracting latent representations...
+Applying PCA...
+PCA explained variance ratio: [0.27417678 0.20885445 0.14964306 0.14085326 0.08548471 0.06262494]
+Applying HDBSCAN clustering...
+Clustering PCA representation...
+
+Clustering Statistics:
+PCA-based clustering:
+Number of clusters: 148
+Number of noise points: 138945
+
+Plotting PCA cluster representatives...
+
+Creating cluster sample plots...
+Created directory for cluster samples: /home/pdong/Astro UROP/plots/RNN plots/30000_files_RNN/190000/cluster_samples_20250410_092604
