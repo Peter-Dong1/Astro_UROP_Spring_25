@@ -4,6 +4,8 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 import os
 import glob
@@ -15,6 +17,7 @@ import time
 from datetime import datetime
 import seaborn as sns
 from scipy.stats import linregress
+import light_curve as Light_Curve_Package
 
 from helper import (
     load_light_curve,
@@ -23,6 +26,11 @@ from helper import (
     create_dataframe_of_light_curves,
     DEFAULT_DATA_DIR
 )
+
+# known interesting light curves
+known_light_curves = ["em01_211120_020_LightCurve_00007_c010_rebinned.fits",
+                        "em01_039135_020_LightCurve_00058_c010_rebinned.fits",
+                        "em01_038099_020_LightCurve_00005_c010_rebinned.fits"]
 
 # Define functions for time series analysis
 def lag1_autocorrelation(time_series):
@@ -122,7 +130,7 @@ def rise_fall_ratio_over_time(time_series):
         return min(rise_count / fall_count, 10.0)  # Cap at 10.0 to avoid extreme values
 
 def df_extract_statistical_features_error(df):
-    """Extract statistical features from light curve with error handling"""
+    """Extract statistical features from a single light curve with error handling"""
     # Print file being processed
     # print(f"Processing file: {df.attrs.get('FILE_NAME', 'Unknown')}")
     """
@@ -144,13 +152,13 @@ def df_extract_statistical_features_error(df):
 
     # Robust Statistics
     median = np.median(df['RATE'])
-    iqr = np.percentile(df['RATE'], 75) - np.percentile(df['RATE'], 25)
+    # iqr = np.percentile(df['RATE'], 75) - np.percentile(df['RATE'], 25)
 
     # Beyond 1 sigma (error-aware)
     # beyond_1_sigma = np.sum(np.abs(df['RATE'] - weighted_mean) > np.sqrt(weighted_variance)) / len(df['RATE'])
 
-    # Median Absolute Deviation (MAD)
-    mad = stats.median_abs_deviation(df['RATE'])
+    # Median Absolute Deviation (x)
+    # mad = stats.median_abs_deviation(df['RATE'])
 
     # Skewness and Kurtosis
     # skewness = ((df['RATE'] - weighted_mean)**3 * weights).sum() / (weights.sum() * weighted_variance**1.5)
@@ -159,28 +167,115 @@ def df_extract_statistical_features_error(df):
     # Additional Features
     max_rate = df['RATE'].max()
     min_rate = df['RATE'].min()
-    max_amp = max_rate - min_rate
+    # max_amp = max_rate - min_rate
 
     # Flux Percentile Ratio (95th - 5th percentile)
-    flux_percentile_ratio = np.percentile(df['RATE'], 95) - np.percentile(df['RATE'], 5)
+    # flux_percentile_ratio = np.percentile(df['RATE'], 95) - np.percentile(df['RATE'], 5)
 
     # Time series analysis features
     lag1_autocorr = lag1_autocorrelation(df['RATE'])
     hurst_exp = hurst_exponent(df['RATE'])
     mean_rise_fall_ratio = rise_fall_ratio_over_time(df['RATE'])
 
+    # Light_Curve_Package
+    mag_ratio = Light_Curve_Package.MagnitudePercentageRatio()
+    bey_1std = Light_Curve_Package.BeyondNStd(nstd=1)
+    # perc_amp = Light_Curve_Package.PercentAmplitude()
+    # max_slope = Light_Curve_Package.MaximumSlope()
+    stetson_k = Light_Curve_Package.StetsonK()
+    excess_var = Light_Curve_Package.ExcessVariance()
+    mean_var = Light_Curve_Package.MeanVariance()
+
+    count = 3
+    feature_n = ["mag_ratio", "beyond1std", "stetson_k", "excess_var", "mean_var"]
+
+    try:
+        mr = mag_ratio(np.asarray(df["TIME"].values, dtype=np.float64),
+                            np.asarray(df["RATE"].values, dtype=np.float64),
+                            np.asarray(df["SYM_ERR"].values, dtype=np.float64),
+                            sorted=True,
+                            check=False)[0]
+    except:
+        print(f"[Warning] Failed to compute magnitude_ratio for file: {df.attrs.get('FILE_NAME', 'Unknown')}")
+        mr = 0
+
+    try:
+        beyond_1std = bey_1std(np.asarray(df["TIME"].values, dtype=np.float64),
+                            np.asarray(df["RATE"].values, dtype=np.float64),
+                            np.asarray(df["SYM_ERR"].values, dtype=np.float64),
+                            sorted=True,
+                         check=False)[0]
+    except:
+        print(f"[Warning] Failed to compute beyond_1std for file: {df.attrs.get('FILE_NAME', 'Unknown')}")
+        beyond_1std = 0
+
+    # try:
+    #     maximum_slope = max_slope(np.asarray(df["TIME"].values, dtype=np.float64),
+    #                         np.asarray(df["RATE"].values, dtype=np.float64),
+    #                         np.asarray(df["SYM_ERR"].values, dtype=np.float64),
+    #                         sorted=True,
+    #                      check=False)
+    # except:
+    #     maximum_slope = 0
+
+    try:
+        sk = stetson_k(np.asarray(df["TIME"].values, dtype=np.float64),
+                            np.asarray(df["RATE"].values, dtype=np.float64),
+                            np.asarray(df["SYM_ERR"].values, dtype=np.float64),
+                            sorted=True,
+                         check=False)[0]
+    except:
+        print(f"[Warning] Failed to compute stetson_k for file: {df.attrs.get('FILE_NAME', 'Unknown')}")
+        sk = 0
+
+    try:
+        ex_var = excess_var(np.asarray(df["TIME"].values, dtype=np.float64),
+                            np.asarray(df["RATE"].values, dtype=np.float64),
+                            np.asarray(df["SYM_ERR"].values, dtype=np.float64),
+                            sorted=True,
+                         check=False)[0]
+    except:
+        print(f"[Warning] Failed to compute excess_var for file: {df.attrs.get('FILE_NAME', 'Unknown')}")
+        ex_var = 0
+
+    try:
+        m_var = mean_var(np.asarray(df["TIME"].values, dtype=np.float64),
+                            np.asarray(df["RATE"].values, dtype=np.float64),
+                            np.asarray(df["SYM_ERR"].values, dtype=np.float64),
+                            sorted=True,
+                         check=False)[0]
+    except:
+        print(f"[Warning] Failed to compute mean_variance for file: {df.attrs.get('FILE_NAME', 'Unknown')}")
+        m_var = 0
+
+
+
+
+
+    mr = float(mr)
+    beyond_1std = float(beyond_1std)
+    # maximum_slope = float(maximum_slope[0])
+    sk = float(sk)
+    ex_var = float(ex_var)
+    m_var = float(m_var)
+    features = [mr, beyond_1std, sk, ex_var, m_var]
+
+
+    # print(features)
+    # print('\n'.join(f"{name} = {value:.2f}" for name, value in zip(extractor.names, features)))
+
 
     # Create a row with features
     feature_names = [
-        "weighted_mean", "weighted_variance", "median", "iqr",
-        "mad", "max_amp", "flux_percentile_ratio", "lag1_autocorr", "hurst_exp",
-        "mean_rise_fall_ratio"
+        "weighted_mean", "weighted_variance", "median",
+        "lag1_autocorr", "hurst_exp",
+        "mean_rise_fall_ratio", "mag_ratio", "beyond1std", "stetson_k", "excess_var", "mean_var"
     ]
 
     feature_values = np.array([
-        weighted_mean, weighted_variance, median, iqr,
-        mad, max_amp, flux_percentile_ratio, lag1_autocorr, hurst_exp,
-        mean_rise_fall_ratio
+        weighted_mean, weighted_variance, median,
+        lag1_autocorr, hurst_exp,
+        mean_rise_fall_ratio, mr, beyond_1std, sk, ex_var, m_var
     ])
 
     # Create the DataFrame row
@@ -219,7 +314,7 @@ def df_process_all_light_curves_error(light_curves):
     return result
 
 # This method works with a pandas dataframe consisting of more information
-def df_detect_outliers_extreme(df, contamination=0.05):
+def df_detect_outliers_extreme(df, contamination=0.05, known_light_curves=known_light_curves):
     print(f"\nStarting outlier detection with contamination={contamination}...")
     start_time = time.time()
     """
@@ -373,7 +468,41 @@ def df_detect_outliers_extreme(df, contamination=0.05):
     # Store feature importance in the DataFrame
     df['feature_importance'] = [feature_importance_df] * len(df)
 
+    # -----------------------------
+    # Similarity-weighted re-ranking (NEW) # CHANGE HERE !!
+    # -----------------------------
+    if known_light_curves:
+        df['basename'] = df['file_path'].apply(lambda p: os.path.basename(p))
+        df['is_known'] = df['basename'].isin(known_light_curves)
+
+        if df['is_known'].any():
+            known_features = np.vstack(df[df['is_known']]['feature_values'].values)
+            similarities = cosine_similarity(scaled_features, known_features)
+            max_sim_to_known = similarities.max(axis=1)
+            df['max_similarity_to_known'] = max_sim_to_known
+
+            # Normalize
+            iso_norm = (iso_scores - iso_scores.min()) / (iso_scores.max() - iso_scores.min())
+            cos_norm = (max_sim_to_known - max_sim_to_known.min()) / (max_sim_to_known.max() - max_sim_to_known.min())
+
+            # flip bc how it works
+            cos_norm = 1 - cos_norm
+
+            # Blend scores
+            alpha = 0.3
+            df['custom_outlier_score'] = (1 - alpha) * iso_norm + alpha * cos_norm
+            df['custom_outlier_rank'] = df['custom_outlier_score'].rank(ascending=True).astype(int)
+        else:
+            print("Warning: None of the known light curves were found in this dataset.")
+            df['custom_outlier_score'] = df['iso_score']
+            df['custom_outlier_rank'] = df['iso_score'].rank(ascending=True).astype(int)
+    else:
+        print("No known_light_curves provided — skipping similarity reweighting.")
+        df['custom_outlier_score'] = df['iso_score']
+        df['custom_outlier_rank'] = df['iso_score'].rank(ascending=True).astype(int)
+
     return df
+
 
 def df_visualize_clusters(scaled_features, combined_outliers, output_file=None):
     """
@@ -417,7 +546,7 @@ def df_visualize_clusters(scaled_features, combined_outliers, output_file=None):
     plt.show()
     print(f"Visualization completed in {time.time() - start_time:.2f} seconds")
 
-def df_analyze_light_curves(light_curves, contamination=0.05, vis=True, output_file=None):
+def df_analyze_light_curves(light_curves, contamination=0.05, vis=True, output_file=None, processed_light_curves=None):
     print("\nStarting light curve analysis pipeline...")
     total_start_time = time.time()
     """
@@ -432,7 +561,7 @@ def df_analyze_light_curves(light_curves, contamination=0.05, vis=True, output_f
     - pd.DataFrame: DataFrame with extracted features and outlier analysis results.
     """
     # Detect outliers using the provided function
-    features = df_process_all_light_curves_error(light_curves)
+    features = processed_light_curves
     results = df_detect_outliers_extreme(features, contamination=contamination)
 
     scaled_features = np.vstack(results['scaled_features'].values)
@@ -541,7 +670,7 @@ def plot_light_curve(ax, lc, title=None, is_outlier=False):
     ax.set_xlabel('Time', fontsize=7)
     ax.set_ylabel('Rate', fontsize=7)
 
-def create_grid_plots(light_curves, results, output_dir, timestamp):
+def create_grid_plots(light_curves, results, output_dir, timestamp, plot_num=200, per_file=25):
     """Create grid plots of outliers and regular light curves"""
     print("\nCreating grid plots of outliers and regular light curves...")
     grid_start_time = time.time()
@@ -552,11 +681,15 @@ def create_grid_plots(light_curves, results, output_dir, timestamp):
 
     # Select 25 outliers and 25 regular light curves
     # If there are fewer than 25 outliers, select all available
-    n_outliers = min(25, len(outlier_indices))
+    n_outliers = min(plot_num, len(outlier_indices))
     n_regular = min(25, len(regular_indices))
 
+    # CHANGE HERE !!
     # Sort outliers by outlier rank (most extreme first)
-    if 'outlier_rank' in results.columns:
+    if 'custom_outlier_rank' in results.columns:
+        # Lower rank means more extreme outlier
+        outlier_indices = outlier_indices[np.argsort(results.loc[outlier_indices, 'custom_outlier_rank'])]
+    elif 'outlier_rank' in results.columns:
         # Lower rank means more extreme outlier
         outlier_indices = outlier_indices[np.argsort(results.loc[outlier_indices, 'outlier_rank'])]
 
@@ -564,29 +697,64 @@ def create_grid_plots(light_curves, results, output_dir, timestamp):
     if len(regular_indices) > n_regular:
         regular_indices = np.random.choice(regular_indices, n_regular, replace=False)
 
-    # Create a 5x5 grid for outliers
-    if n_outliers > 0:
-        fig_outliers, axes_outliers = plt.subplots(5, 5, figsize=(15, 15))
-        axes_outliers = axes_outliers.flatten()
+    n_files = math.ceil(n_outliers / per_file)
 
-        for i in range(25):
-            if i < n_outliers:
-                idx = outlier_indices[i]
-                lc = light_curves[idx]
+    for file_idx in range(n_files):
+        start = file_idx * per_file
+        end   = start + per_file
+        chunk = outlier_indices[start:end]
+        n_in_chunk = len(chunk)
+
+        # build figure
+        fig, axes = plt.subplots(5, 5, figsize=(15, 15))
+        axes = axes.flatten()
+
+        for i in range(per_file):
+            ax = axes[i]
+            if i < n_in_chunk:
+                idx = chunk[i]
+                lc  = light_curves[idx]
                 file_name = os.path.basename(results.iloc[idx]['file_path'])
-                rank = results.iloc[idx].get('outlier_rank', 'N/A')
-                title = f"Outlier #{i+1} (Rank: {rank})\n{file_name[:-18]}"
-                plot_light_curve(axes_outliers[i], lc, title, is_outlier=True)
+                rank      = results.iloc[idx].get('custom_outlier_rank', 'N/A')
+                title     = f"#{start + i + 1} (Rank {rank})\n{file_name[:-18]}"
+                plot_light_curve(ax, lc, title, is_outlier=True)
             else:
-                axes_outliers[i].axis('off')  # Hide unused subplots
+                ax.axis('off')
 
         plt.tight_layout()
-        outlier_grid_file = os.path.join(output_dir, f"outlier_grid.png")
-        fig_outliers.savefig(outlier_grid_file, dpi=300)
-        plt.close(fig_outliers)
-        # print(f"Outlier grid plot saved to: {outlier_grid_file}")
-    else:
-        print("No outliers found to plot")
+
+        outlier_grid_file = os.path.join(
+            output_dir,
+            f"outlier_grid_{file_idx+1}.png"
+        )
+        fig.savefig(outlier_grid_file, dpi=300)
+        plt.close(fig)
+        print(f"Saved {outlier_grid_file}")
+
+
+
+    # Create a 5x5 grid for outliers
+    # if n_outliers > 0:
+    #     fig_outliers, axes_outliers = plt.subplots(5, 5, figsize=(15, 15))
+    #     axes_outliers = axes_outliers.flatten()
+
+    #     for i in range(25):
+    #         if i < n_outliers:
+    #             idx = outlier_indices[i]
+    #             lc = light_curves[idx]
+    #             file_name = os.path.basename(results.iloc[idx]['file_path'])
+    #             rank = results.iloc[idx].get('outlier_rank', 'N/A')
+    #             title = f"Outlier #{i+1} (Rank: {rank})\n{file_name[:-18]}"
+    #             plot_light_curve(axes_outliers[i], lc, title, is_outlier=True)
+    #         else:
+    #             axes_outliers[i].axis('off')  # Hide unused subplots
+
+    #     plt.tight_layout()
+    #     fig_outliers.savefig(outlier_grid_file, dpi=300)
+    #     plt.close(fig_outliers)
+    #     # print(f"Outlier grid plot saved to: {outlier_grid_file}")
+    # else:
+    #     print("No outliers found to plot")
 
     # Create a 5x5 grid for regular light curves
     if n_regular > 0:
@@ -629,7 +797,6 @@ def run_umap_clustering(light_curves, n_neighbors=15, min_dist=0.1, n_components
         min_dist (float): The minimum distance between points in the embedding.
         n_components (int): The number of dimensions in the embedding.
         output_file (str): Path to save the plot (if None, a default name will be used).
-
     Returns:
         tuple: (cluster_labels, feature_matrix, umap_embedding)
     """
@@ -658,7 +825,7 @@ def run_umap_clustering(light_curves, n_neighbors=15, min_dist=0.1, n_components
     if output_file is None:
         output_file = os.path.join(UMAP_OUTPUT_DIR, f"umap_clusters.png")
 
-def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, output_file=None, skip_noise=True, known_light_curves=None):
+def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, output_file=None, skip_noise=True, known_light_curves=None, processed_light_curves=None):
     """
     Run HDBSCAN clustering on the statistical features of light curves and visualize
     the clusters using PCA.
@@ -692,7 +859,7 @@ def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, o
 
     # Extract statistical features
     print("Extracting statistical features for clustering...")
-    features_df = df_process_all_light_curves_error(light_curves)
+    features_df = processed_light_curves
     feature_matrix = np.stack(features_df['feature_values'].values, axis=0)
     feature_names = features_df['feature_names'].values[0]  # All rows have same feature names
 
@@ -802,8 +969,76 @@ def run_hdbscan_clustering(light_curves, min_cluster_size=5, min_samples=None, o
     # Show the plot
     plt.show()
 
+    # After the main clustering visualization
+    print("\nGenerating individual cluster PCA plots...")
+    plot_cluster_pcas(scaled_features, cluster_labels)
+    print("Individual cluster PCA plots completed")
+
     print(f"HDBSCAN clustering completed in {time.time() - clustering_start_time:.2f} seconds")
     return cluster_labels, feature_matrix, features_2d
+
+def plot_cluster_pcas(scaled_features, cluster_labels, output_dir=None):
+    """
+    Create separate PCA plots for each cluster identified by HDBSCAN.
+    Parameters:
+    scaled_features (np.ndarray): Scaled feature matrix
+    cluster_labels (np.ndarray): Cluster labels from HDBSCAN
+    output_dir (str): Directory to save the plots (if None, uses HDBSCAN_OUTPUT_DIR)
+    """
+    if output_dir is None:
+        output_dir = HDBSCAN_OUTPUT_DIR
+
+    # Create cluster PCA directory if it doesn't exist
+    cluster_pca_dir = os.path.join(output_dir, "cluster_pcas")
+    os.makedirs(cluster_pca_dir, exist_ok=True)
+
+    # Get number of clusters (excluding noise)
+    # n_clusters = len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)
+    n_clusters = len(set(cluster_labels))
+
+    # Process each cluster separately
+    for i in range(n_clusters):
+        # Get data for this cluster
+        cluster_mask = cluster_labels == i - 1
+        cluster_data = scaled_features[cluster_mask]
+
+        # Skip if cluster is too small for PCA
+        if len(cluster_data) < 2:
+            print(f"Skipping PCA for cluster {i - 1} - too few points ({len(cluster_data)})")
+            continue
+
+        # Perform PCA on this cluster's data
+        pca = PCA()
+        cluster_pca = pca.fit_transform(cluster_data)
+
+        # Create scree plot
+        plt.figure(figsize=(10, 5))
+        # plt.subplot(121)
+        # explained_var = pca.explained_variance_ratio_
+        # plt.plot(range(1, len(explained_var) + 1), np.cumsum(explained_var), 'bo-')
+        # plt.xlabel('Number of Components')
+        # plt.ylabel('Cumulative Explained Variance Ratio')
+        # plt.title(f'Cluster {i} Screen Plot')
+
+        # Plot first two components
+        plt.subplot(122)
+        plt.scatter(cluster_pca[:, 0], cluster_pca[:, 1], alpha=0.6)
+        plt.xlabel('First Principal Component')
+        plt.ylabel('Second Principal Component')
+        plt.title(f'Cluster {i - 1} PCA Plot')
+
+        # # Add variance explained text
+        # var_explained = explained_var[:2].sum()
+        # plt.text(0.05, 0.95, f'Variance explained: {var_explained:.2%}',
+        #         transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.8))
+
+        plt.tight_layout()
+
+        # Save the plot
+        plt.savefig(os.path.join(cluster_pca_dir, f'cluster_{i - 1}_pca.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print(f"Created PCA plot for cluster {i - 1} with {len(cluster_data)} points")
 
 # Continue the UMAP function implementation
 def continue_umap_clustering(light_curves, features_df, scaled_features, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5, skip_noise=True):
@@ -906,7 +1141,7 @@ def continue_umap_clustering(light_curves, features_df, scaled_features, n_neigh
 
     return cluster_labels, scaled_features, umap_embedding
 
-def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5, skip_noise=True):
+def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_components=2, output_file=None, eps=0.5, min_samples=5, skip_noise=True, processed_light_curves=None):
     """
     Complete UMAP clustering pipeline, from feature extraction to visualization.
 
@@ -931,7 +1166,7 @@ def run_umap_clustering_complete(light_curves, n_neighbors=15, min_dist=0.1, n_c
 
     # Extract statistical features
     print("Extracting statistical features for clustering...")
-    features_df = df_process_all_light_curves_error(light_curves)
+    features_df = processed_light_curves
 
     # Prepare feature matrix
     feature_matrix = np.vstack(features_df['feature_values'].values)
@@ -1075,7 +1310,7 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
     # Create default output filename if none provided
     if output_file is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"corner_plot.png")
+        output_file = os.path.join(FEATURE_OUTPUT_DIR, f"corner_plot")
 
     # Get the output directory from the output file path
     output_dir = os.path.dirname(output_file)
@@ -1113,8 +1348,10 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
     # Create the corner plot
     print("Creating corner plot of features colored by clusters (excluding noise)...")
 
+    output1 = output_file + "_reg.png"
+
     # Create the pairplot with cluster coloring
-    corner_plot = sns.pairplot(
+    corner_plot1 = sns.pairplot(
         df_features_filtered,
         hue='cluster',
         palette=palette,
@@ -1124,17 +1361,43 @@ def plot_feature_corner_plot(feature_matrix, feature_names, cluster_labels, outp
     )
 
     # Set log scale for all axes
-    for ax in corner_plot.axes.flatten():
+    for ax in corner_plot1.axes.flatten():
         if ax is not None:
             ax.set_xscale('symlog', linthresh=1e-2)
             ax.set_yscale('symlog', linthresh=1e-2)
 
     # Add a main title for the entire figure
-    corner_plot.fig.suptitle('Feature Relationships by Cluster (Noise Excluded)', fontsize=24, y=1.02)
+    corner_plot1.fig.suptitle('Feature Relationships by Cluster (Noise Excluded)', fontsize=24, y=1.02)
 
     # Save the plot
-    corner_plot.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"Corner plot saved to: {output_file}")
+    corner_plot1.savefig(output1, dpi=300, bbox_inches='tight')
+    print(f"Corner plot 1 saved to: {output1}")
+
+    output2 = output_file + "_KD.png"
+
+    # Create the KD pairplot with cluster coloring
+    corner_plot2 = sns.pairplot(
+        df_features_filtered,
+        hue='cluster',
+        palette=palette,
+        plot_kws={'alpha': 0.7},
+        kind='kde', # reduce the number of contours - levels/significatnce etc
+        diag_kind='kde',
+        corner=True,  # False - full pairplot, True - corner plot
+    )
+
+    # Set log scale for all axes
+    for ax in corner_plot2.axes.flatten():
+        if ax is not None:
+            ax.set_xscale('symlog', linthresh=1e-2)
+            ax.set_yscale('symlog', linthresh=1e-2)
+
+    # Add a main title for the entire figure
+    corner_plot2.fig.suptitle('Feature Relationships by Cluster (Noise Excluded)', fontsize=24, y=1.02)
+
+    # Save the plot
+    corner_plot2.savefig(output2, dpi=300, bbox_inches='tight')
+    print(f"Corner plot 1 saved to: {output2}")
 
     return output_file
 
@@ -1204,16 +1467,16 @@ def analyze_cluster_feature_importance(feature_matrix, feature_names, cluster_la
             if s1 == 0 and s2 == 0:
                 effect_size = 0
             else:
-                # Calculate Cohen's d effect size
+                # Calculate Cohen's d effect size - defaults to  1e-8 if std deviation is too close to 0
                 pooled_std = np.sqrt(((n1-1)*(s1**2) + (n2-1)*(s2**2)) / (n1+n2-2))
-                effect_size = abs(cluster_mean - other_mean) / (pooled_std if pooled_std > 0 else 1)
+                effect_size = abs(cluster_mean - other_mean) / (pooled_std if pooled_std > 0 else  1e-8)
 
             importance_scores.append({
                 'feature': feature,
                 'effect_size': effect_size,
                 'cluster_mean': cluster_mean,
                 'other_mean': other_mean,
-                'percent_difference': abs(cluster_mean - other_mean) / (abs(other_mean) if other_mean != 0 else 1) * 100
+                'percent_difference': abs(cluster_mean - other_mean) / (abs(other_mean) if other_mean != 0 else  1e-8) * 100
             })
 
         # Convert to DataFrame and sort by importance
@@ -1466,17 +1729,91 @@ def plot_significant_curves_with_cluster(significant_curves, light_curves, featu
 
     return sig_plots_dir
 
+def plot_top_similar_curves(light_curves, processed_light_curves, known_light_curves, output_dir=None, n_similar=25):
+    """
+    Plot the top N most similar light curves for each known light curve based on cosine similarity.
+
+    Parameters:
+        light_curves (list): List of all light curve DataFrames
+        known_light_curves (list): List of known light curve file names
+        output_dir (str): Directory to save plots (default: current directory)
+        n_similar (int): Number of most similar curves to plot (default: 25)
+    """
+    if output_dir is None:
+        output_dir = os.getcwd()
+
+    # Process all light curves to get features
+    print("Extracting features from all light curves...")
+    processed_lcs = processed_light_curves
+
+    # Extract feature matrix and scale it
+    feature_matrix = np.array([lc['feature_values'] for lc in processed_lcs])
+    scaler = RobustScaler()
+    scaled_features = scaler.fit_transform(feature_matrix)
+
+    # Create mapping of filenames to indices
+    file_to_idx = {os.path.basename(lc['file_path']): i for i, lc in enumerate(processed_lcs)}
+
+    # For each known light curve
+    for known_lc in known_light_curves:
+        if known_lc not in file_to_idx:
+            print(f"Warning: {known_lc} not found in dataset")
+            continue
+
+        known_idx = file_to_idx[known_lc]
+        known_features = scaled_features[known_idx].reshape(1, -1)
+
+        # Calculate cosine similarity with all other curves
+        similarities = cosine_similarity(scaled_features, known_features).flatten()
+
+        # Get indices of top N+1 similar curves (including itself)
+        top_indices = np.argsort(similarities)[::-1][:n_similar + 1]
+
+        # Create a grid plot
+        n_rows = 5
+        n_cols = 5
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 20))
+        fig.suptitle(f'Top {n_similar} Most Similar Light Curves to {known_lc}', fontsize=16)
+
+        # Plot each similar curve
+        for i, idx in enumerate(top_indices[1:]):  # Skip first one (itself)
+            row = i // n_cols
+            col = i % n_cols
+            sim_score = similarities[idx]
+
+            # Plot the light curve
+            plot_light_curve(axes[row, col], light_curves[idx])
+            axes[row, col].set_title(f'Similarity: {sim_score:.3f}')
+
+        # Remove empty subplots if any
+        for i in range(len(top_indices), n_rows * n_cols):
+            row = i // n_cols
+            col = i % n_cols
+            fig.delaxes(axes[row, col])
+
+        # Adjust layout and save
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        output_file = os.path.join(output_dir, f'similar_curves_{os.path.splitext(known_lc)[0]}.png')
+        plt.savefig(output_file)
+        plt.close()
+
+        print(f"Saved plot for {known_lc} to {output_file}")
+
+
+def plot_light_curve_from_file(filepath, is_outlier=False, title=None, savepath=None):
+    lc = load_light_curve(filepath)
+    fig, ax = plt.subplots()
+    plot_light_curve(ax, lc, title=title, is_outlier=is_outlier)
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(savepath + "/" + os.path.basename(filepath) + ".png", dpi=300, bbox_inches='tight')
+
 if __name__ == "__main__":
 
-    # known interesting light curves
-    known_light_curves = ["em01_211120_020_LightCurve_00007_c010_rebinned.fits",
-                          "em01_039135_020_LightCurve_00058_c010_rebinned.fits",
-                          "em01_038099_020_LightCurve_00005_c010_rebinned.fits"]
-
     # File Loading Pipeline
-    size = 5001
+    size = 30000
     # Create output directory for plots if it doesn't exist
-    FILE_DIR = '/home/pdong/Astro UROP/plots/feature_extraction_plots_test' + f"/{size}"
+    FILE_DIR = '/home/pdong/Astro UROP/plots/feature_extraction_plots_test' + f"/{size}_9"
     # Create directories for both HDBSCAN and UMAP outputs
     FEATURE_OUTPUT_DIR = FILE_DIR + "/FEATURES"
     HDBSCAN_OUTPUT_DIR = FILE_DIR + "/HDBSCAN"
@@ -1485,6 +1822,9 @@ if __name__ == "__main__":
     os.makedirs(HDBSCAN_OUTPUT_DIR, exist_ok=True)
     os.makedirs(UMAP_OUTPUT_DIR, exist_ok=True)
     os.makedirs(FEATURE_OUTPUT_DIR, exist_ok=True)
+
+    for i in known_light_curves:
+        plot_light_curve_from_file(os.path.join(DEFAULT_DATA_DIR, i), title=i, is_outlier=True, savepath=FEATURE_OUTPUT_DIR)
 
     print("Starting feature extraction process...")
     print("Loading FITS files...")
@@ -1513,13 +1853,48 @@ if __name__ == "__main__":
     #     for lc in light_curves:
     #         f.write(f"{lc.iloc[0].attrs['FILE_NAME']}\n")
 
+    # print(Light_Curve_Package.__version__)
+    # # Half-amplitude of magnitude
+    # amplitude = Light_Curve_Package.Amplitude()
+    # # Fraction of points beyond standard deviations from mean
+    # beyond_std = Light_Curve_Package.BeyondNStd(nstd=1)
+    # # Slope, its error and reduced chi^2 of linear fit
+    # linear_fit = Light_Curve_Package.LinearFit()
+    # # Feature extractor, it will evaluate all features in more efficient way
+    # extractor = Light_Curve_Package.Extractor(amplitude, beyond_std, linear_fit)
+
+    # test_lc = light_curves[0]
+    # print(test_lc)
+    # print(test_lc["TIME"].values)
+    # print(test_lc["RATE"].values)
+    # print(np.asarray(test_lc["SYM_ERR"].values, dtype=np.float64))
+    # # features = extractor(test_lc["TIME"].values, test_lc["RATE"].values, test_lc["SYM_ERR"].values, sorted=True, check=False)
+    # # print(features)
+    # # print(help(Light_Curve_Package.Amplitude))
+    # features = extractor(np.asarray(test_lc["TIME"].values, dtype=np.float64),
+    #                      np.asarray(test_lc["RATE"].values, dtype=np.float64),
+    #                      np.asarray(test_lc["SYM_ERR"].values, dtype=np.float64),
+    #                      sorted=True,
+    #                      check=False)
+    # print(features)
+    # print('\n'.join(f"{name} = {value:.2f}" for name, value in zip(extractor.names, features)))
+
+
+
     print("\n" + "="*50)
     print("STARTING MAIN EXECUTION")
     print("="*50)
+    print("Filtering out small light curves")
+    light_curves = [lc for lc in light_curves if len(lc) > 3]
 
 
     print("Writing example of features:")
     extract_features_from_lc(light_curves[0], output_file=FEATURE_OUTPUT_DIR)
+
+    print("Processing All Features:")
+    processed_lcs = df_process_all_light_curves_error(light_curves)
+
+    # raise(NotImplementedError)
 
     # Track overall execution time
     overall_start_time = time.time()
@@ -1527,7 +1902,7 @@ if __name__ == "__main__":
     # Run the analysis and save visualization
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = os.path.join(FEATURE_OUTPUT_DIR, f"main_analysis.png")
-    results = df_analyze_light_curves(light_curves, output_file=output_file)
+    results = df_analyze_light_curves(light_curves, output_file=output_file, processed_light_curves=processed_lcs)
 
     # Print summary of results
     print("\n" + "="*50)
@@ -1566,14 +1941,15 @@ if __name__ == "__main__":
         light_curves,
         min_cluster_size=10,  # Adjust based on dataset size
         skip_noise=False,
-        known_light_curves=known_light_curves
+        known_light_curves=known_light_curves,
+        processed_light_curves=processed_lcs
     )
 
     # Create a corner plot of features colored by clusters
     feature_names = [
-        "weighted_mean", "weighted_variance", "median", "iqr",
-        "mad", "max_amp", "flux_percentile_ratio", "lag1_autocorr", "hurst_exp",
-        "mean_rise_fall_ratio"
+        "weighted_mean", "weighted_variance", "median",
+        "lag1_autocorr", "hurst_exp",
+        "mean_rise_fall_ratio", "mag_ratio", "beyond1std", "stetson_k", "excess_var", "mean_var"
     ]
     corner_plot_file = plot_feature_corner_plot(
         feature_matrix,
@@ -1585,12 +1961,12 @@ if __name__ == "__main__":
 
     # Create sample plots for each HDBSCAN cluster
     print("\nCreating sample plots for each HDBSCAN cluster...")
-    features_df = pd.DataFrame({
+    features_df_orig = pd.DataFrame({
         "file_path": [lc.attrs['FILE_NAME'] for lc in light_curves],
     })
     hdbscan_cluster_samples_dir = plot_cluster_samples(
         light_curves,
-        features_df,
+        features_df_orig,
         cluster_labels,
         HDBSCAN_OUTPUT_DIR,
         timestamp
@@ -1614,13 +1990,14 @@ if __name__ == "__main__":
 
     # Run UMAP with default parameters
     umap_cluster_labels, umap_feature_matrix, umap_embedding = run_umap_clustering_complete(
-    light_curves,
-    n_neighbors=15,
-    min_dist=0.1,
+        light_curves,
+        n_neighbors=15,
+        min_dist=0.1,
         n_components=2,
         eps=0.5,
         min_samples=5,
-        skip_noise=True
+        skip_noise=True,
+        processed_light_curves=processed_lcs
     )
 
     # Create a corner plot of features colored by UMAP clusters
@@ -1636,7 +2013,7 @@ if __name__ == "__main__":
     print("\nCreating sample plots for each UMAP cluster...")
     umap_cluster_samples_dir = plot_cluster_samples(
         light_curves,
-        features_df,
+        features_df_orig,
         umap_cluster_labels,
         UMAP_OUTPUT_DIR,
         timestamp
@@ -1658,20 +2035,48 @@ if __name__ == "__main__":
     output_file = os.path.join(FEATURE_OUTPUT_DIR, "cluster_assignments.txt")
 
     with open(output_file, "w") as f:
-        for file_path, cluster in get_cluster_assignments(known_light_curves, features_df, cluster_labels).items():
+        for file_path, cluster in get_cluster_assignments(known_light_curves, features_df_orig, cluster_labels).items():
             if cluster is not None:
-                print(f"Light curve {file_path} belongs to cluster {cluster}")
+                # print(f"Light curve {file_path} belongs to cluster {cluster}")
                 f.write(f"Light curve {file_path} belongs to cluster {cluster}\n")
             else:
-                print(f"Light curve {file_path} was not found in the dataset")
+                # print(f"Light curve {file_path} was not found in the dataset")
                 f.write(f"Light curve {file_path} was not found in the dataset\n")
 
     significant_clusters_dir = plot_significant_curves_with_cluster(
         known_light_curves,
         light_curves,
-        features_df,
+        features_df_orig,
         cluster_labels,
         FEATURE_OUTPUT_DIR
     )
+
+    # 1) add a column with just the basename of each file_path
+    results['basename'] = results['file_path'].apply(lambda p: os.path.basename(p))
+
+    # 2) mark which rows correspond to your known list
+    results['is_known'] = results['basename'].isin(known_light_curves)
+
+    # 3) now filter to see which known files are flagged as outliers
+    known_outliers = results.loc[
+        results['is_known'] & results['combined_outlier'],
+        ['basename', 'outlier_rank']
+    ]
+
+    with open(output_file, "w") as f:
+        # known curves flagged as outliers?
+        print("These known curves were flagged as outliers:")
+        print(known_outliers)
+        f.write("These known curves were flagged as outliers:")
+        f.write(str(known_outliers))
+
+    plot_top_similar_curves(
+        light_curves=light_curves,  # Your list of light curve DataFrames
+        processed_light_curve=processed_lcs
+        known_light_curves=known_light_curves,  # Your list of known outlier filenames
+        output_dir=FEATURE_OUTPUT_DIR,  # Optional output directory
+        n_similar=25  # Optional number of similar curves to show,
+    )
+
 
     print("Finished feature extraction and analysis.")

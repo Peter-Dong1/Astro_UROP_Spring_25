@@ -1,0 +1,17 @@
+Cluster Feature Importance Analysis
+==================================================
+
+Cluster 0 is distinguished by:
+  - excess_var: 99.2% importance
+  - hurst_exp: 0.2% importance
+  - mean_rise_fall_ratio: 0.2% importance
+  - mean_var: 0.1% importance
+  - lag1_autocorr: 0.1% importance
+
+Cluster 1 is distinguished by:
+  - excess_var: 98.5% importance
+  - mean_rise_fall_ratio: 0.3% importance
+  - lag1_autocorr: 0.3% importance
+  - hurst_exp: 0.3% importance
+  - mean_var: 0.2% importance
+
