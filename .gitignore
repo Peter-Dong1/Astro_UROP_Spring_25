@@ -6,5 +6,8 @@ training_plots/**/*.txt
 plots/**/*.txt
 
 *.slurm
+*.pkl
+*.out
+*.err
 
 inaccessible_lightcurves.txt
