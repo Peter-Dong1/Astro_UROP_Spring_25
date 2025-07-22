@@ -51,13 +51,6 @@ from helper import (
 import argparse
 # DB_PATH = os.path.join(PROCESSED_DATA_DIR, "features.sqlite")
 
-def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument('--job-id',    type=int, default=0,
-                   help="Which job this is (0‐based)")
-    p.add_argument('--num-jobs',  type=int, default=1,
-                   help="Total number of parallel jobs")
-    return p.parse_args()
 
 # Define functions for time series analysis
 def lag1_autocorrelation(time_series):
@@ -457,99 +450,77 @@ def chunked(iterable, size):
     for i in range(0, len(iterable), size):
         yield iterable[i:i+size], i
 
-def process_chunk(chunk_light_curves, chunk_index, band, output_dir):
+def process_chunk(chunk_light_curves, band, output_dir):
     """
-    Process one chunk of light curves, extract features including bexvar,
-    then save the chunk’s DataFrame to disk.
+    Process one chunk of light curves (a list of light curve DataFrames),
+    extract features from each, and save each result as a separate pickle file
+    named after the light curve FITS file.
     """
     pid = os.getpid()
-    print(f"[PID {pid}] Starting chunk {chunk_index} (n={len(chunk_light_curves)} curves)…")
-    features_list = []
+    print(f"[PID {pid}] Starting chunk with {len(chunk_light_curves)} light curves…")
+
     for i, lc in enumerate(chunk_light_curves):
-        print(f"[Chunk {chunk_index}] Processing {i}/{len(chunk_light_curves)}:")
-        result, sig_nev = df_extract_statistical_features_error(lc)
-        features_list.append(result)
+        try:
+            file_name = lc.attrs.get("FILE_NAME", f"unknown_{i}")
+            print(f"[{i}/{len(chunk_light_curves)}] Processing {file_name}...")
 
-    if not features_list:
-        print(f"SEARCH: CHUNCH {chunk_index} FILED")
-        return None
+            result, sig_nev = df_extract_statistical_features_error(lc)
+            if result is None:
+                print(f"[Warning] Skipping {file_name} due to processing error.")
+                continue
 
-    df_chunk = pd.concat(features_list, ignore_index=True)
-    chunk_file = os.path.join(output_dir, f"features_chunk_{chunk_index}.pkl")
-    df_chunk.to_pickle(chunk_file)
-    print(f"  → Saved chunk {chunk_index} with {len(df_chunk)} curves to {chunk_file}")
-    print(f"[PID {pid}] Finished chunk {chunk_index}")
-    return chunk_file
+            # Sanitize file name and save result
+            base_name = Path(file_name).name.replace(".fits", "").replace("/", "_")
+            out_path = os.path.join(output_dir, f"features_{base_name}.pkl")
+            result.to_pickle(out_path)
+            print(f"  → Saved features to {out_path}")
 
+        except Exception as e:
+            print(f"[Error] Failed to process curve {i}: {e}")
+
+    print(f"[PID {pid}] Finished chunk")
+
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument('--chunk-file', type=str, required=True,
+                   help="Path to pickled light curve chunk (.pkl)")
+    p.add_argument('--chunk-id', type=int, default=0,
+                   help="Index to label output files")
+    p.add_argument('--output-dir', type=str, default=PROCESSED_DATA_DIR,
+                   help="Directory to save processed features")
+    return p.parse_args()
 
 def main():
     """Main function to process all light curves and save features."""
-    # args = parse_args()
-    # job_id   = args.job_id
-    # num_jobs = args.num_jobs
 
     print("Starting feature extraction pipeline...")
 
-    # ensure output dir exists
-    # out_dir = PROCESSED_DATA_DIR
-    # os.makedirs(out_dir, exist_ok=True)
-
-    # # initialize (or reset) the SQLite database & table
-    # conn = sqlite3.connect(DB_PATH)
-    # # use WAL mode for concurrent writers
-    # conn.execute("PRAGMA journal_mode=WAL;")
-    # # you can tweak page_size, cache_size, synchronous, etc. here
-
-    # # drop existing table if you want to start fresh:
-    # conn.execute("DROP TABLE IF EXISTS features;")
-
-    # # create table schema to match your DataFrame columns:
-    # conn.execute("""
-    #   CREATE TABLE features (
-    #     file_path TEXT,
-    #     feature_names BLOB,     -- we'll store the list as JSON
-    #     feature_values BLOB,    -- NumPy array as BLOB
-    #     light_curve BLOB        -- optional, or omit if too big
-    #   );
-    # """)
-    # conn.commit()
-    # conn.close()
-
     # Load all light curves
-    print("Loading light curves...")
-    try:
-        fits_files  = load_all_fits_files()
-        if not fits_files:
-            raise ValueError("No fits files were loaded successfully")
-    except Exception as e:
-        print(f"Error loading fits files: {str(e)}")
-        return
-
-    light_curves = load_n_light_curves(LOAD_SIZE, fits_files, band = DEFAULT_BAND)
-
-    print(f"Successfully loaded {len(light_curves)} light curves")
-
-    # # Process light curves and extract features
+    # print("Loading light curves...")
     # try:
-    #     features_df = df_process_all_light_curves_error(light_curves)
-    #     if len(features_df) == 0:
-    #         raise ValueError("No features were extracted successfully")
+    #     fits_files  = load_all_fits_files()
+    #     if not fits_files:
+    #         raise ValueError("No fits files were loaded successfully")
     # except Exception as e:
-    #     print(f"Error during feature extraction: {str(e)}")
+    #     print(f"Error loading fits files: {str(e)}")
     #     return
 
-    # # Save features to file
-    # print(f"\nSaving features to {FEATURES_FILE}...")
-    # try:
-    #     # Create directory if it doesn't exist
-    #     os.makedirs(os.path.dirname(FEATURES_FILE), exist_ok=True)
-    #     features_df.to_pickle(FEATURES_FILE)
-    # except Exception as e:
-    #     print(f"Error saving features: {str(e)}")
-        # return
+    # light_curves = load_n_light_curves(LOAD_SIZE, fits_files, band = DEFAULT_BAND)
+
+    # print(f"Successfully loaded {len(light_curves)} light curves")
+
+    args = parse_args()
+    chunk_file = args.chunk_file
+    chunk_idx = args.chunk_id
+    output_dir = args.output_dir
+
+    print(f"Loading light curves from chunk: {chunk_file}")
+    with open(chunk_file, "rb") as f:
+        light_curves = pickle.load(f)
+    print(f"Loaded {len(light_curves)} light curves from chunk.")
 
     # 3) Choose chunk size (e.g., 100 curves per chunk)
-    chunk_size = 5
+    chunk_size = 1
     # Directory where each chunk writes out: features_chunk_<idx>.pkl
     out_dir = PROCESSED_DATA_DIR
     os.makedirs(out_dir, exist_ok=True)
@@ -571,7 +542,7 @@ def main():
 
             # print(f"[Job {job_id}] Submitting chunk {chunk_idx}")
             fut = exe.submit(
-                process_chunk, chunk, chunk_idx, DEFAULT_BAND, out_dir
+                process_chunk, chunk, DEFAULT_BAND, out_dir
             )
             futures[fut] = chunk_idx
 
@@ -590,46 +561,37 @@ def main():
                 print(f"✗ Chunk {idx} failed:", e)
 
     # 5) Combine all chunk files (old + new)
-    dfs = []
-    for fn in sorted(chunk_files, key=lambda f: int(Path(f).stem.split("_")[-1])):
-        try:
-            dfs.append(pd.read_pickle(fn))
-        except Exception as e:
-            print(f"Failed to read {fn}: {e}")
-    if not dfs:
-        print("No chunk files found—nothing to combine.")
-        return
+    # dfs = []
+    # for fn in sorted(chunk_files, key=lambda f: int(Path(f).stem.split("_")[-1])):
+    #     try:
+    #         dfs.append(pd.read_pickle(fn))
+    #     except Exception as e:
+    #         print(f"Failed to read {fn}: {e}")
+    # if not dfs:
+    #     print("No chunk files found—nothing to combine.")
+    #     return
 
-    final_df = pd.concat(dfs, ignore_index=True)
-    os.makedirs(os.path.dirname(FEATURES_FILE), exist_ok=True)
-    final_df.to_pickle(FEATURES_FILE)
-    print(f"\nAll chunks combined into {FEATURES_FILE}")
-
-    features_df = final_df
-
-    # # 5) read back the full table for downstream use
-    # conn = sqlite3.connect(DB_PATH)
-    # df = pd.read_sql_query("SELECT * FROM features", conn)
-    # conn.close()
-
-    # # if you want, serialize to FEATURES_FILE as well
+    # final_df = pd.concat(dfs, ignore_index=True)
     # os.makedirs(os.path.dirname(FEATURES_FILE), exist_ok=True)
-    # df.to_pickle(FEATURES_FILE)
+    # final_df.to_pickle(FEATURES_FILE)
+    # print(f"\nAll chunks combined into {FEATURES_FILE}")
 
-    # Print sample of the features
-    if len(features_df) > 0:
-        print("\nSample of extracted features:")
-        sample = features_df.iloc[0]
-        print(f"File: {sample['file_path']}")
-        for name, value in zip(sample['feature_names'], sample['feature_values']):
-            print(f"- {name}: {value:.6f}")
+    # features_df = final_df
 
-        # Print statistics about feature
-        success_rate = len(features_df) / len(light_curves) * 100
-        print(f"\nFeature extraction success rate: {success_rate:.1f}%")
+    # # Print sample of the features
+    # if len(features_df) > 0:
+    #     print("\nSample of extracted features:")
+    #     sample = features_df.iloc[0]
+    #     print(f"File: {sample['file_path']}")
+    #     for name, value in zip(sample['feature_names'], sample['feature_values']):
+    #         print(f"- {name}: {value:.6f}")
 
-        if success_rate < 100:
-            print("Note: Some light curves were skipped due to errors. Check the log for details.")
+    #     # Print statistics about feature extraction
+    #     success_rate = len(features_df) / len(light_curves) * 100
+    #     print(f"\nFeature extraction success rate: {success_rate:.1f}%")
+
+    #     if success_rate < 100:
+    #         print("Note: Some light curves were skipped due to errors. Check the log for details.")
 
 if __name__ == "__main__":
     main()

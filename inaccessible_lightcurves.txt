@@ -1,1 +1,0 @@
-/pool001/rarcodia/eROSITA_public/data/eRASS1_lc_rebinned/em01_188090_020_LightCurve_00067_c010_rebinned.fits

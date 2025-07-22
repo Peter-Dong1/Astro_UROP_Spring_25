@@ -98,6 +98,10 @@ def load_light_curve(file_path, band=1, trunc=20):
                 'ERRM': data['RATE_ERRM'][:, band],  # Negative error
                 'ERRP': data['RATE_ERRP'][:, band],  # Positive error
                 'SYM_ERR': (data['RATE_ERRM'][:, band] + data['RATE_ERRP'][:, band]) / 2,  # Symmetric error approximation
+                'FRACEXP': data['FRACEXP'][:, band],
+                'COUNTS': data['COUNTS'][:, band],
+                'BACKCOUNTS': data['BACK_COUNTS'][:, band],
+                'BACKRATIO': data['BACKRATIO'],
             })
 
             # Truncate to a maximum of 20 data points
@@ -124,7 +128,7 @@ def load_all_fits_files(data_dir=None):
     """
     if data_dir is None:
         data_dir = DEFAULT_DATA_DIR
-    return glob.glob(os.path.join(data_dir, "*.fits"))
+    return glob.glob(os.path.join(data_dir, "*_rebinned.fits"))
 
 def load_n_light_curves(n, fits_files, band='all', trunc=20):
     """

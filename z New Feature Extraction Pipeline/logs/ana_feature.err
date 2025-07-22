@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/run_pipeline_on_features.py", line 1105, in <module>
-    main()
-  File "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/run_pipeline_on_features.py", line 1042, in main
-    visualize_features(results['scaled_features'], results['combined_outlier'], features_df['file_path'])
-  File "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/run_pipeline_on_features.py", line 305, in visualize_features
-    raise ValueError("scaled_features must be a 2D array")
-ValueError: scaled_features must be a 2D array

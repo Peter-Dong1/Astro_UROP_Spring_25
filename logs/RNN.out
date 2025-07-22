@@ -1,9 +1,0 @@
-Torch Diagnostics
-Available: True
-Version: 2.5.1, 12.4
-Start Loading Files ...
-Loaded Files Complete
-Start Loading Light Curves ...
-[1;34mwandb[0m: 
-[1;34mwandb[0m: 🚀 View run [33mcrimson-valley-1[0m at: [34mhttps://wandb.ai/peterdong1951-massachusetts-institute-of-technology/140000_files_RNN/runs/lawk71xk[0m
-[1;34mwandb[0m: Find logs at: [1;35m../../../orcd/home/002/pdong/Astro UROP/wandb/run-20250418_093303-lawk71xk/logs[0m

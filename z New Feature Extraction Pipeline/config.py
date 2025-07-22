@@ -1,14 +1,14 @@
 import os
 
-LOAD_SIZE = 1000
+LOAD_SIZE = 'all'
 
 # Directory paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data") + '/' + str(LOAD_SIZE)
-PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processed")
+PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processedbatch")
 
 # Feature extraction output directory
-number = 1
+number = 250
 PLOT_DIR = os.path.join(BASE_DIR, "plots")
 FILE_PLOT_DIR = os.path.join(PLOT_DIR,(str(LOAD_SIZE)) + str(number))
 FEATURE_OUTPUT_DIR = os.path.join(FILE_PLOT_DIR, "features")
@@ -36,7 +36,11 @@ DEFAULT_CONTAMINATION = 0.05
 DEFAULT_N_NEIGHBORS = 15
 DEFAULT_MIN_DIST = 0.1
 DEFAULT_N_COMPONENTS = 2
-DEFAULT_MIN_CLUSTER_SIZE = 5
+# DEFAULT_MIN_CLUSTER_SIZE = 0 # Smaller
+# DEFAULT_EPSILON = 1
+#TODO
+# Epsilon - Larger
+# Change distances for HDBSCAN to cosine simlarty
 
 # File for storing extracted features
-FEATURES_FILE = os.path.join(PROCESSED_DATA_DIR, "light_curve_features.pkl")
+FEATURES_FILE = os.path.join(PROCESSED_DATA_DIR, "feature.pkl")
