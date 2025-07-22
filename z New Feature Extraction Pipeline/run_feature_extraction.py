@@ -616,7 +616,7 @@ def main():
     # os.makedirs(os.path.dirname(FEATURES_FILE), exist_ok=True)
     # df.to_pickle(FEATURES_FILE)
 
-    # Print sample of the features
+    # Print sample of the feature
     if len(features_df) > 0:
         print("\nSample of extracted features:")
         sample = features_df.iloc[0]
