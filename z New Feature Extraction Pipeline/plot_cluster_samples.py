@@ -167,33 +167,33 @@ if __name__ == "__main__":
     )
 
     # Add code to calculate and save excess variance statistics
-    try:
-        features_df = load_features()
-        if 'excess_var' in features_df.columns:
-            excess_var_values = features_df['excess_var'].dropna()
-            stats = {
-                'max': excess_var_values.max(),
-                'min': excess_var_values.min(),
-                'mean': excess_var_values.mean(),
-                'median': excess_var_values.median(),
-                'count': len(excess_var_values)
-            }
+    # try:
+    #     features_df = load_features()
+    #     if 'excess_var' in features_df.columns:
+    #         excess_var_values = features_df['excess_var'].dropna()
+    #         stats = {
+    #             'max': excess_var_values.max(),
+    #             'min': excess_var_values.min(),
+    #             'mean': excess_var_values.mean(),
+    #             'median': excess_var_values.median(),
+    #             'count': len(excess_var_values)
+    #         }
 
-            # Create output directory if it doesn't exist
-            os.makedirs(f'{os.path.dirname(os.path.abspath(__file__))}/statistics', exist_ok=True)
+    #         # Create output directory if it doesn't exist
+    #         os.makedirs(f'{os.path.dirname(os.path.abspath(__file__))}/statistics', exist_ok=True)
 
-            # Write statistics to file
-            with open(f'{os.path.dirname(os.path.abspath(__file__))}/statistics/excess_variance_stats.txt', 'w') as f:
-                f.write("Excess Variance Statistics\n")
-                f.write("=========================\n")
-                f.write(f"Maximum: {stats['max']:.6f}\n")
-                f.write(f"Minimum: {stats['min']:.6f}\n")
-                f.write(f"Mean: {stats['mean']:.6f}\n")
-                f.write(f"Median: {stats['median']:.6f}\n")
-                f.write(f"Count: {stats['count']}\n")
+    #         # Write statistics to file
+    #         with open(f'{os.path.dirname(os.path.abspath(__file__))}/statistics/excess_variance_stats.txt', 'w') as f:
+    #             f.write("Excess Variance Statistics\n")
+    #             f.write("=========================\n")
+    #             f.write(f"Maximum: {stats['max']:.6f}\n")
+    #             f.write(f"Minimum: {stats['min']:.6f}\n")
+    #             f.write(f"Mean: {stats['mean']:.6f}\n")
+    #             f.write(f"Median: {stats['median']:.6f}\n")
+    #             f.write(f"Count: {stats['count']}\n")
 
-            print(f"\nExcess variance statistics saved to: statistics/excess_variance_stats.txt")
-        else:
-            print("\nWarning: 'excess_var' column not found in features")
-    except Exception as e:
-        print(f"\nError calculating excess variance statistics: {str(e)}")
+    #         print(f"\nExcess variance statistics saved to: statistics/excess_variance_stats.txt")
+    #     else:
+    #         print("\nWarning: 'excess_var' column not found in features")
+    # except Exception as e:
+    #     print(f"\nError calculating excess variance statistics: {str(e)}")

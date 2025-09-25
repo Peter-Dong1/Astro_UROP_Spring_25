@@ -5,6 +5,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import euclidean_distances, cosine_similarity
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
@@ -14,10 +15,10 @@ import hdbscan
 import umap
 import json
 import h5py
-import numpy as np
-import os
 from pathlib import Path
+from scipy.stats import scoreatpercentile
 import pickle
+
 
 from config import (
     FEATURES_FILE,
@@ -30,12 +31,60 @@ from config import (
     DEFAULT_N_NEIGHBORS,
     DEFAULT_MIN_DIST,
     DEFAULT_N_COMPONENTS,
+    SELECTED_FEATURES_FOR_CLUSTERING,
     number
 )
-DEFAULT_MIN_CLUSTER_SIZE = 5 # Smaller TODO: Realisitcally 20+
-DEFAULT_EPSILON = 0.13
-DEFAULT_EOM = 'eom'
-DEFAULT_MIN_SAMPLES = 3
+DEFAULT_MIN_CLUSTER_SIZE = 24 # Smaller TODO: Realisitcally 20+
+DEFAULT_EPSILON = 0.11
+DEFAULT_EOM = 'leaf'
+DEFAULT_MIN_SAMPLES = 12
+
+from collections import defaultdict
+
+def build_index_maps(features_df):
+    """Build fast + consistent lookups for files."""
+    file_paths = features_df['file_path'].values
+    basenames  = np.array([os.path.basename(p) for p in file_paths])
+
+    name_to_idxs = defaultdict(list)
+    for i, b in enumerate(basenames):
+        name_to_idxs[b].append(i)
+
+    fullpath_to_idx = {p: i for i, p in enumerate(file_paths)}
+    return file_paths, basenames, name_to_idxs, fullpath_to_idx
+
+def resolve_unique_index(identifier, name_to_idxs, fullpath_to_idx, *, strict=False):
+    """
+    Resolve an identifier (full path or basename) to a unique row index.
+    Returns an int index, or None if not found/ambiguous when strict=False.
+    """
+    # Prefer exact full-path match
+    if identifier in fullpath_to_idx:
+        return fullpath_to_idx[identifier]
+
+    base = os.path.basename(identifier)
+    idxs = name_to_idxs.get(base, [])
+
+    if len(idxs) == 1:
+        return idxs[0]
+
+    if strict:
+        if len(idxs) == 0:
+            raise ValueError(f"No file matching {identifier!r} (basename {base!r}) in features_df.")
+        raise ValueError(
+            f"Ambiguous basename {base!r}: found {len(idxs)} matches. "
+            f"Pass a full path or set strict=False to skip."
+        )
+    # non-strict: silently skip when not found or ambiguous
+    raise IndexError
+    return None
+
+def warn_on_duplicate_basenames(name_to_idxs):
+    dups = {k: v for k, v in name_to_idxs.items() if len(v) > 1}
+    if dups:
+        print("Warning: duplicate basenames detected; use full paths to disambiguate:")
+        for k, v in sorted(dups.items(), key=lambda kv: kv[0]):
+            print(f"  {k}: {len(v)} matches")
 
 def load_features():
     """Load the extracted features from file."""
@@ -45,7 +94,6 @@ def load_features():
 
 def save_analysis_results(
     features_df,
-    umap_labels,
     hdbscan_labels,
     outlier_results,
     feature_matrix,
@@ -58,7 +106,6 @@ def save_analysis_results(
 
     Args:
         features_df (pd.DataFrame): DataFrame containing features
-        umap_labels (np.ndarray): UMAP clustering labels
         hdbscan_labels (np.ndarray): HDBSCAN clustering labels
         outlier_results (dict): Dictionary containing outlier detection results
         feature_matrix (np.ndarray): Matrix of feature values
@@ -106,9 +153,6 @@ def save_analysis_results(
         dt = h5py.string_dtype(encoding='utf-8')
         f.create_dataset('feature_names', data=np.array(feature_names, dtype=dt))
 
-        # Store clustering results
-        if umap_labels is not None:
-            f.create_dataset('umap_labels', data=umap_labels.astype('int32'), compression='gzip')
         f.create_dataset('hdbscan_labels', data=hdbscan_labels.astype('int32'), compression='gzip')
 
         # Store outlier results in a group
@@ -124,28 +168,50 @@ def save_analysis_results(
 
     print(f"Saved analysis results to {features_file} and {light_curves_file}")
     return str(features_file), str(light_curves_file)
-    #     },
-    #     'metadata': {
-    #         'num_samples': len(features_df),
-    #         'num_features': len(feature_names)
-    #     },
-    #     'light_curves': light_curve_data
-    # }
 
-    # Add UMAP embedding if available
-    if umap_embedding is not None:
-        results['umap_embedding'] = {
-            'x': umap_embedding[0].tolist(),
-            'y': umap_embedding[1].tolist()
-        }
-
-    # Save results
+    # Save results - currently not used, but maybe useful later for web-app
     output_file = web_data_dir / 'analysis_results.json'
     with open(output_file, 'w') as f:
         json.dump(results, f)
 
     print(f"Analysis results saved to: {output_file}")
     return str(output_file)
+
+def _discrete_cmap_for_labels(labels, base_cmap='tab20', noise_label=-1):
+    """
+    Build a discrete ListedColormap + BoundaryNorm + mapping from raw cluster labels
+    to contiguous indices, so that scatter + colorbar stay perfectly in sync.
+
+    Returns:
+        label_to_idx: dict mapping raw label -> 0..K-1
+        idx_to_label: list, idx -> raw label
+        cmap: ListedColormap of length K
+        norm: BoundaryNorm for 0..K
+        ticks: list of tick positions (at bin centers)
+        ticklabels: list of raw label values for display on colorbar
+    """
+    uniq = sorted(set(int(x) for x in labels))
+    # put noise at the end so it’s visually separated
+    if noise_label in uniq:
+        uniq = [u for u in uniq if u != noise_label] + [noise_label]
+
+    K = len(uniq)
+    base = plt.get_cmap(base_cmap, max(K, 3))
+    colors = [base(i) for i in range(K)]
+
+    # make noise a light gray if present
+    if noise_label in uniq:
+        colors[-1] = (0.7, 0.7, 0.7, 1.0)
+
+    cmap = mpl.colors.ListedColormap(colors, name=f"{base_cmap}_disc_{K}")
+    bounds = list(range(K + 1))
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+
+    label_to_idx = {lab: i for i, lab in enumerate(uniq)}
+    idx_to_label = uniq
+    ticks = [i + 0.5 for i in range(K)]
+    ticklabels = [str(l) for l in uniq]
+    return label_to_idx, idx_to_label, cmap, norm, ticks, ticklabels
 
 def detect_outliers(df, contamination=0.05, known_light_curves=KNOWN_LIGHT_CURVES):
     """
@@ -194,6 +260,7 @@ def detect_outliers(df, contamination=0.05, known_light_curves=KNOWN_LIGHT_CURVE
     print("Scaling features using RobustScaler...")
     scaler = RobustScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
+    scaled_features =  np.nan_to_num(scaled_features, nan=0.0)
 
     # Isolation Forest
     print("Running Isolation Forest algorithm...")
@@ -367,8 +434,12 @@ def visualize_features(scaled_features, outliers, file_paths, output_file=None):
 
 
     # Identify known light curves
-    known_indices = [i for i, path in enumerate(file_paths)
-                    if any(k in path for k in KNOWN_LIGHT_CURVES)]
+    # known_indices = [i for i, path in enumerate(file_paths)
+    #                 if any(k in path for k in KNOWN_LIGHT_CURVES)]
+
+    basenames = np.array([os.path.basename(p) for p in file_paths])
+    known_set = set(KNOWN_LIGHT_CURVES)
+    known_indices = [i for i, b in enumerate(basenames) if b in known_set]
 
     # Plot normal points (excluding known light curves)
     normal_indices = [i for i in range(len(features_2d))
@@ -435,276 +506,6 @@ def visualize_features(scaled_features, outliers, file_paths, output_file=None):
 
     print(f"Visualization completed in {time.time() - start_time:.2f} seconds")
 
-def run_umap_clustering(features_df, light_curves, n_neighbors=DEFAULT_N_NEIGHBORS, min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
-                       min_dist=DEFAULT_MIN_DIST, n_components=DEFAULT_N_COMPONENTS,
-                       output_file=None):
-    """
-    Run UMAP clustering on the features.
-
-    Args:
-        features_df (pd.DataFrame): DataFrame with features
-        light_curves (list): List of light curve DataFrames
-        n_neighbors (int): Number of neighbors for UMAP
-        min_dist (float): Minimum distance for UMAP
-        n_components (int): Number of dimensions for UMAP
-        output_file (str): Path to save the plot
-
-    Returns:
-        tuple: (cluster_labels, feature_matrix, umap_embedding)
-    """
-    print("\nStarting UMAP clustering...")
-    start_time = time.time()
-
-    # Create default output filename if none provided
-    if output_file is None:
-        output_file = os.path.join(UMAP_OUTPUT_DIR, "umap_clusters.png")
-
-    # Extract feature matrix
-    feature_matrix = np.vstack(features_df['feature_values'].values)
-
-    # Scale features
-    scaler = RobustScaler()
-    scaled_features = scaler.fit_transform(feature_matrix)
-
-    # Normalize features to unit length for cosine similarity effect
-    from sklearn.preprocessing import normalize
-    normalized_features = normalize(scaled_features, norm='l2')
-
-    # Run UMAP on normalized features
-    reducer = umap.UMAP(
-        n_neighbors=n_neighbors,
-        min_dist=min_dist,
-        n_components=n_components,
-        random_state=42,
-        metric='euclidean'  # Use euclidean on normalized data for cosine-like behavior
-    )
-    embedding = reducer.fit_transform(normalized_features)
-
-    # Cluster the embedding using HDBSCAN with euclidean metric on normalized data
-    clustering = hdbscan.HDBSCAN(
-        min_cluster_size=DEFAULT_MIN_CLUSTER_SIZE,
-        min_samples=DEFAULT_MIN_SAMPLES,
-        metric='euclidean',  # Use euclidean on normalized data for cosine-like behavior
-        cluster_selection_method=DEFAULT_EOM,
-        cluster_selection_epsilon=DEFAULT_EPSILON
-
-    )
-    cluster_labels = clustering.fit_predict(embedding)
-
-    # Identify known light curves
-    file_paths = features_df['file_path'].values
-    known_indices = [i for i, path in enumerate(file_paths)
-                    if any(k in path for k in KNOWN_LIGHT_CURVES)]
-
-    # Create the UMAP plot
-    plt.figure(figsize=(12, 8))
-
-    # Plot regular points (excluding known light curves)
-    regular_indices = [i for i in range(len(embedding)) if i not in known_indices]
-    if regular_indices:
-        scatter = plt.scatter(
-            embedding[regular_indices, 0], embedding[regular_indices, 1],
-            c=np.array(cluster_labels)[regular_indices], cmap='Spectral',
-            alpha=0.6, s=40, edgecolors='white', linewidths=0.5,
-            label='Regular Points'
-        )
-
-    # Plot known light curves with star markers
-    for idx in known_indices:
-        color = plt.cm.Spectral((cluster_labels[idx] % 20) / 20.0)  # Get color from colormap
-        plt.scatter(
-            embedding[idx, 0], embedding[idx, 1],
-            c=[color], marker='*', s=300,
-            edgecolors='black', linewidth=1.5,
-            label=f'Known: {os.path.basename(file_paths[idx])}'
-        )
-
-        # Add filename as annotation
-        filename = os.path.basename(file_paths[idx])
-        plt.annotate(
-            filename,
-            (embedding[idx, 0], embedding[idx, 1]),
-            xytext=(10, 10), textcoords='offset points',
-            fontsize=9, fontweight='bold',
-            bbox=dict(boxstyle='round,pad=0.3', alpha=0.8, facecolor='white')
-        )
-
-    plt.colorbar(scatter, label='Cluster')
-    plt.xlabel('UMAP 1')
-    plt.ylabel('UMAP 2')
-    plt.title('UMAP Clustering of Light Curves')
-    plt.grid(True, alpha=0.3)
-
-    # Adjust legend to avoid duplicate entries
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), loc='best', bbox_to_anchor=(1.05, 1), borderaxespad=0.)
-
-    # Save and show the plot
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"Plot saved to: {output_file}")
-    plt.close()
-
-    # Create cluster sample plots
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    cluster_plots_dir = os.path.join(os.path.dirname(output_file), f"cluster_plots_{timestamp}")
-    os.makedirs(cluster_plots_dir, exist_ok=True)
-
-    # Get unique clusters (excluding noise points labeled as -1)
-    unique_clusters = np.unique(cluster_labels)
-    unique_clusters = unique_clusters[unique_clusters != -1]
-
-    # Generate cluster statistics
-    cluster_stats = []
-
-    # Add statistics for each cluster
-    for cluster in np.unique(cluster_labels):
-        if cluster == -1:
-            cluster_name = "Noise/Outliers"
-        else:
-            cluster_name = f"Cluster {cluster}"
-
-        # Get indices of points in this cluster
-        cluster_indices = np.where(cluster_labels == cluster)[0]
-        cluster_size = len(cluster_indices)
-
-        # Find known curves in this cluster
-        known_in_cluster = []
-        for idx in cluster_indices:
-            if idx in known_indices:
-                known_in_cluster.append(os.path.basename(file_paths[idx]))
-
-        cluster_stats.append({
-            'cluster': cluster_name,
-            'size': cluster_size,
-            'known_curves': known_in_cluster
-        })
-
-    # Save cluster statistics to a file
-    stats_file = os.path.join(os.path.dirname(output_file), 'cluster_statistics.txt')
-    with open(stats_file, 'w') as f:
-        f.write("UMAP Cluster Statistics\n")
-        f.write("======================\n\n")
-
-        # Sort clusters by size (descending)
-        cluster_stats_sorted = sorted(cluster_stats, key=lambda x: int(x['size']), reverse=True)
-
-        min_str = f'Min Cluster Size: {DEFAULT_MIN_CLUSTER_SIZE}\n'
-        def_eps = f'Default Epsilon: {DEFAULT_EPSILON}\n'
-
-        f.write(min_str)
-        f.write(def_eps)
-
-
-        for stat in cluster_stats_sorted:
-            f.write(f"{stat['cluster']}:\n")
-            f.write(f"  Number of curves: {stat['size']}\n")
-            if stat['known_curves']:
-                f.write("  Known curves in this cluster:\n")
-                for curve in stat['known_curves']:
-                    f.write(f"    - {curve}\n")
-            f.write("\n")
-
-    print(f"Cluster statistics saved to: {stats_file}")
-
-    # Second pass: create plots for each significant curve
-
-    sig_plots_dir = os.path.join(UMAP_OUTPUT_DIR, "significant_curves")
-    os.makedirs(sig_plots_dir, exist_ok=True)
-
-    for sig_curve in KNOWN_LIGHT_CURVES:
-        # Find the index of the significant curve
-        try:
-            sig_idx = np.where([sig_curve in path for path in file_paths])[0][0]
-        except IndexError:
-            print(f"Warning: Could not find {sig_curve} in features DataFrame")
-            continue
-
-        # Get the cluster of the significant curve
-        cluster_num = cluster_labels[sig_idx]
-        cluster_indices = np.where(cluster_labels == cluster_num)[0]
-
-        # Determine how many subplots we need (up to 15, or fewer if cluster is smaller)
-        n_curves = min(15, len(cluster_indices))
-        n_cols = 5
-        n_rows = (n_curves + n_cols - 1) // n_cols  # Ceiling division
-
-        # Create figure with appropriate size for the grid
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 4*n_rows), dpi=100)
-        axes = axes.ravel()  # Flatten the axes array for easier iteration
-
-        # Set background color for the figure
-        fig.patch.set_facecolor('#f0f0f0')
-
-        # Get cluster info for title
-        file_name = os.path.basename(sig_curve)
-        cluster_name = f"Cluster {cluster_num}" if cluster_num != -1 else "Noise"
-
-        # Set a main title for the entire figure
-        fig.suptitle(f"{cluster_name} (n={len(cluster_indices)} curves, showing {n_curves} samples)",
-                    fontsize=16, y=1.02)
-
-        # Plot each light curve in the cluster (up to 15)
-        for i, idx in enumerate(cluster_indices[:n_curves]):
-            lc = light_curves[idx]
-            ax = axes[i]
-
-            # Set axis background to white
-            ax.set_facecolor('white')
-
-            # Plot with error bars if available
-            if 'ERRM' in lc and 'ERRP' in lc:
-                ax.errorbar(lc['TIME'], lc['RATE'],
-                         yerr=[lc['ERRM'], lc['ERRP']],
-                         fmt='o',
-                         color='#1f77b4',  # Blue color for all curves
-                         ecolor='#888888',
-                         elinewidth=0.8,
-                         capsize=1.5,
-                         capthick=0.8,
-                         zorder=3)
-            else:
-                ax.plot(lc['TIME'], lc['RATE'],
-                       'o',
-                       color='#1f77b4',
-                       linewidth=1.2,
-                       zorder=3)
-
-            # Customize the subplot appearance
-            ax.set_xlabel('Time (s)', fontsize=9)
-            ax.set_ylabel('Rate (counts/s)', fontsize=9)
-            ax.tick_params(axis='both', which='major', labelsize=8)
-            ax.grid(True, color='#e0e0e0', linestyle='-', alpha=0.7)
-
-            # Remove top and right spines
-            for spine in ['top', 'right']:
-                ax.spines[spine].set_visible(False)
-
-            # Add a small title with the curve number
-            ax.set_title(f'Curve {i+1}', fontsize=10, pad=5)
-
-        # Turn off any unused subplots
-        for i in range(n_curves, len(axes)):
-            axes[i].axis('off')
-
-        # Adjust layout to prevent overlap
-        plt.tight_layout()
-
-        # Create output directory if it doesn't exist
-        os.makedirs(sig_plots_dir, exist_ok=True)
-
-        # Save with high resolution
-        plot_file = os.path.join(
-            sig_plots_dir,
-            f'cluster_{cluster_num}_samples.png'
-        )
-        plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-        plt.close()
-
-        print(f'Created sample plot for {cluster_name} with {n_curves} light curves')
-
-    print(f"UMAP clustering completed in {time.time() - start_time:.2f} seconds")
-    return cluster_labels, feature_matrix, embedding
 
 def run_hdbscan(
     features,
@@ -791,6 +592,7 @@ def run_hdbscan_clustering(
     # 3) scale & normalize
     scaler = RobustScaler()
     scaled = scaler.fit_transform(feature_matrix)
+    scaled =  np.nan_to_num(scaled, nan=0.0)
     from sklearn.preprocessing import normalize
     normalized = normalize(scaled, norm='l2')
 
@@ -859,62 +661,165 @@ def run_hdbscan_clustering(
     known_idxs = [i for i, p in enumerate(file_paths)
                     if any(k == os.path.basename(p) for k in KNOWN_LIGHT_CURVES)]
 
-    # 4) Plot
-    plt.figure(figsize=(12,8))
+    # # 4) Plot
+    # plt.figure(figsize=(12,8))
 
-    # Regular points (not known)
+    # # Regular points (not known)
+    # reg = [i for i in range(len(embedding)) if i not in known_idxs]
+    # if reg:
+    #     plt.scatter(
+    #         embedding[reg,0], embedding[reg,1],
+    #         c=cluster_labels[reg],
+    #         cmap='Spectral',
+    #         alpha=0.6,
+    #         s=40,
+    #         edgecolors='white',
+    #         linewidths=0.5,
+    #         label='Light curves'
+    #     )
+
+    # # Known light curves as big stars
+    # for idx in known_idxs:
+    #     color = plt.cm.Spectral((cluster_labels[idx] % 20)/20.0)
+    #     plt.scatter(
+    #         embedding[idx,0], embedding[idx,1],
+    #         c=[color],
+    #         marker='*',
+    #         s=250,
+    #         edgecolors='black',
+    #         linewidths=1.5,
+    #         label=f"Known: {os.path.basename(file_paths[idx])}"
+    #     )
+    #     # annotate filename
+    #     plt.annotate(
+    #         os.path.basename(file_paths[idx]),
+    #         (embedding[idx,0], embedding[idx,1]),
+    #         xytext=(5,5), textcoords='offset points',
+    #         fontsize=9, fontweight='bold',
+    #         bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.8)
+    #     )
+
+    # plt.colorbar(label='HDBSCAN cluster')
+    # plt.xlabel('UMAP 1')
+    # plt.ylabel('UMAP 2')
+    # plt.title('HDBSCAN clusters (UMAP projection)')
+    # plt.grid(alpha=0.3)
+
+    # # avoid duplicate legend entries
+    # handles, labels = plt.gca().get_legend_handles_labels()
+    # by_label = dict(zip(labels, handles))
+    # plt.legend(by_label.values(), by_label.keys(), loc='best', bbox_to_anchor=(1,1))
+
+    # plt.tight_layout()
+    # plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    # plt.close()
+
+    # label_to_idx, idx_to_label, cmap, norm, ticks, ticklabels = _discrete_cmap_for_labels(cluster_labels, base_cmap='tab20', noise_label=-1)
+    # mapped = np.array([label_to_idx[int(l)] for l in cluster_labels], dtype=int)
+
+    # plt.figure(figsize=(12, 8))
+    # reg = [i for i in range(len(embedding)) if i not in known_idxs]
+    # if reg:
+    #     sc = plt.scatter(
+    #         embedding[reg,0], embedding[reg,1],
+    #         c=mapped[reg], cmap=cmap, norm=norm,
+    #         alpha=0.75, s=40, edgecolors='white', linewidths=0.4,
+    #         label='Light curves'
+    #     )
+
+    # for idx in known_idxs:
+    #     plt.scatter(
+    #         embedding[idx,0], embedding[idx,1],
+    #         c=[mapped[idx]], cmap=cmap, norm=norm,
+    #         marker='*', s=280, edgecolors='black', linewidths=1.2,
+    #         label=f"Known: {os.path.basename(file_paths[idx])}"
+    #     )
+    #     plt.annotate(
+    #         os.path.basename(file_paths[idx]),
+    #         (embedding[idx,0], embedding[idx,1]),
+    #         xytext=(6,6), textcoords='offset points',
+    #         fontsize=9, fontweight='bold',
+    #         bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.85)
+    #     )
+
+    # cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap, norm=norm))
+    # cbar.set_ticks(ticks); cbar.set_ticklabels(ticklabels)
+    # cbar.set_label('HDBSCAN cluster')
+
+    # plt.xlabel('UMAP 1'); plt.ylabel('UMAP 2')
+    # plt.title('HDBSCAN clusters (UMAP projection)')
+    # plt.grid(alpha=0.3)
+
+    # h, l = plt.gca().get_legend_handles_labels()
+    # by_label = dict(zip(l, h))
+    # plt.legend(by_label.values(), by_label.keys(), loc='best', bbox_to_anchor=(1,1))
+
+    # plt.tight_layout()
+    # plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    # plt.close()
+
+        # --- Discrete label colormap + mapping ---
+    label_to_idx, idx_to_label, cmap, norm, ticks, ticklabels = _discrete_cmap_for_labels(
+        cluster_labels, base_cmap='tab20', noise_label=-1
+    )
+    mapped = np.array([label_to_idx[int(l)] for l in cluster_labels], dtype=int)
+
+    # --- Figure/Axes (OO style) ---
+    fig, ax = plt.subplots(figsize=(12, 8))
+
     reg = [i for i in range(len(embedding)) if i not in known_idxs]
+    sc = None
     if reg:
-        plt.scatter(
-            embedding[reg,0], embedding[reg,1],
-            c=cluster_labels[reg],
-            cmap='Spectral',
-            alpha=0.6,
-            s=40,
-            edgecolors='white',
-            linewidths=0.5,
+        sc = ax.scatter(
+            embedding[reg, 0], embedding[reg, 1],
+            c=mapped[reg], cmap=cmap, norm=norm,
+            alpha=0.75, s=40, edgecolors='white', linewidths=0.4,
             label='Light curves'
         )
 
-    # Known light curves as big stars
+    # Known light curves
     for idx in known_idxs:
-        color = plt.cm.Spectral((cluster_labels[idx] % 20)/20.0)
-        plt.scatter(
-            embedding[idx,0], embedding[idx,1],
-            c=[color],
-            marker='*',
-            s=250,
-            edgecolors='black',
-            linewidths=1.5,
+        ax.scatter(
+            embedding[idx, 0], embedding[idx, 1],
+            c=[mapped[idx]], cmap=cmap, norm=norm,
+            marker='*', s=280, edgecolors='black', linewidths=1.2,
             label=f"Known: {os.path.basename(file_paths[idx])}"
         )
-        # annotate filename
-        plt.annotate(
+        ax.annotate(
             os.path.basename(file_paths[idx]),
-            (embedding[idx,0], embedding[idx,1]),
-            xytext=(5,5), textcoords='offset points',
+            (embedding[idx, 0], embedding[idx, 1]),
+            xytext=(6, 6), textcoords='offset points',
             fontsize=9, fontweight='bold',
-            bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.8)
+            bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.85)
         )
 
-    plt.colorbar(label='HDBSCAN cluster')
-    plt.xlabel('UMAP 1')
-    plt.ylabel('UMAP 2')
-    plt.title('HDBSCAN clusters (UMAP projection)')
-    plt.grid(alpha=0.3)
+    # --- Colorbar: prefer the real scatter; otherwise attach a dummy mappable to THIS fig/ax ---
+    if sc is None:
+        dummy = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+        dummy.set_array(np.arange(len(idx_to_label)))  # attach data so colorbar is happy
+        cbar = fig.colorbar(dummy, ax=ax)
+    else:
+        cbar = fig.colorbar(sc, ax=ax)
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels(ticklabels)
+    cbar.set_label('HDBSCAN cluster')
 
-    # avoid duplicate legend entries
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), loc='best', bbox_to_anchor=(1,1))
+    ax.set_xlabel('UMAP 1'); ax.set_ylabel('UMAP 2')
+    ax.set_title('HDBSCAN clusters (UMAP projection)')
+    ax.grid(alpha=0.3)
 
-    plt.tight_layout()
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    plt.close()
+    # dedupe legend
+    h, l = ax.get_legend_handles_labels()
+    by_label = dict(zip(l, h))
+    ax.legend(by_label.values(), by_label.keys(), loc='best', bbox_to_anchor=(1,1))
+
+    fig.tight_layout()
+    fig.savefig(output_file, dpi=300, bbox_inches='tight')
+    plt.close(fig)
     print(f"Wrote UMAP plot → {output_file}")
 
     print(f"HDBSCAN clustering completed in {time.time() - start_time:.2f} seconds")
-    return cluster_labels, feature_matrix
+    return cluster_labels, feature_matrix, embedding
 
 def analyze_cluster_feature_importance(feature_matrix, feature_names, cluster_labels, output_dir=None):
     """
@@ -1091,7 +996,7 @@ def plot_cluster_samples(light_curves, features_df, cluster_labels, output_dir, 
         cluster_indices = np.where(cluster_labels == cluster)[0]
 
         # Sample up to 10 light curves from this cluster
-        sample_size = min(10, len(cluster_indices))
+        sample_size = min(25, len(cluster_indices))
         sampled_indices = np.random.choice(cluster_indices, sample_size, replace=False)
 
         # Create subplot grid
@@ -1169,11 +1074,13 @@ def plot_significant_curves_with_cluster(significant_curves, light_curves, featu
             'contains_known': False,
             'known_curves': []
         }
+    file_paths, basenames, name_to_idxs, fullpath_to_idx = build_index_maps(features_df)
 
     # Track which cluster each known curve is in
     for sig_curve in significant_curves:
         try:
-            sig_idx = np.where([sig_curve in path for path in file_paths])[0][0]
+            # sig_idx = np.where([sig_curve in path for path in file_paths])[0][0]
+            sig_idx = resolve_unique_index(sig_curve, name_to_idxs, fullpath_to_idx)
             cluster_num = cluster_labels[sig_idx]
             known_curve_clusters[sig_curve] = cluster_num
 
@@ -1214,12 +1121,13 @@ def plot_significant_curves_with_cluster(significant_curves, light_curves, featu
             f.write(f"\nLight curves in noise cluster: {noise_count} ({noise_count/len(cluster_labels):.1%})\n")
 
     print(f"\nCluster statistics saved to: {cluster_info_file}")
-
+    file_paths, basenames, name_to_idxs, fullpath_to_idx = build_index_maps(features_df)
     # Second pass: create plots for each significant curve
     for sig_curve in significant_curves:
         # Find the index of the significant curve
         try:
-            sig_idx = np.where([sig_curve in path for path in file_paths])[0][0]
+            # sig_idx = np.where([sig_curve in path for path in file_paths])[0][0]
+            sig_idx = resolve_unique_index(sig_curve, name_to_idxs, fullpath_to_idx)
         except IndexError:
             print(f"Warning: Could not find {sig_curve} in features DataFrame")
             continue
@@ -1325,15 +1233,21 @@ def plot_top_similar_curves(light_curves, features_df, known_light_curves, outpu
     # Get feature matrix and file paths
     feature_matrix = np.vstack(features_df['feature_values'].values)
     file_paths = features_df['file_path'].values
+    file_paths, basenames, name_to_idxs, fullpath_to_idx = build_index_maps(features_df)
 
     # Calculate similarity for each known light curve
     for known_lc in known_light_curves:
         try:
             # Find the known light curve in our dataset
-            known_idx = np.where([os.path.basename(fp) == known_lc for fp in file_paths])[0][0]
+            # known_idx = np.where([os.path.basename(fp) == known_lc for fp in file_paths])[0][0]
+            known_idx = resolve_unique_index(known_lc, name_to_idxs, fullpath_to_idx)
         except IndexError:
             print(f"Warning: Known light curve {known_lc} not found in dataset")
             continue
+
+        full_path_known = file_paths[known_idx]
+        print(f"Creating similarity plot for {os.path.basename(known_lc)}")
+        print(f"  → full path: {full_path_known}")
 
         # Calculate cosine similarity with all other light curves
         known_features = feature_matrix[known_idx].reshape(1, -1)
@@ -1625,6 +1539,92 @@ def plot_subcluster_histograms(orig_labels, new_labels,
         plt.close()
         print(f"Wrote {fname}")
 
+def filter_features(features_df, selected_features):
+    """Filter feature_values in features_df to only include selected features."""
+    def filter_row(row):
+        name_to_value = dict(zip(row['feature_names'], row['feature_values']))
+        return np.array([name_to_value.get(f, np.nan) for f in selected_features])
+
+    features_df = features_df.copy()
+    features_df['feature_values'] = features_df.apply(filter_row, axis=1)
+    features_df['feature_names'] = [selected_features] * len(features_df)
+    return features_df
+
+def histogram_similar_curve_cluster_hits(
+    features_df,
+    cluster_labels,
+    known_light_curves,
+    output_dir,
+    n_similar=200
+):
+    """
+    For each known curve:
+      - find the top-n_similar most similar curves (cosine in feature space)
+      - plot a histogram of their cluster IDs
+      - save a CSV with the counts
+
+    Saves plots to <output_dir>/similar_hits and a combined CSV per known curve.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    hits_dir = os.path.join(output_dir, "similar_hits")
+    os.makedirs(hits_dir, exist_ok=True)
+
+    feature_matrix = np.vstack(features_df['feature_values'].values)
+    file_paths = features_df['file_path'].values
+    basenames = np.array([os.path.basename(p) for p in file_paths])
+
+    from sklearn.metrics.pairwise import cosine_similarity as _cos
+    sims = _cos(feature_matrix, feature_matrix)  # (N, N)
+
+    # Discrete palette consistent with clustering
+    label_to_idx, idx_to_label, cmap, norm, ticks, ticklabels = _discrete_cmap_for_labels(cluster_labels, base_cmap='tab20', noise_label=-1)
+    file_paths, basenames, name_to_idxs, fullpath_to_idx = build_index_maps(features_df)
+
+    for known in known_light_curves:
+        # find index of known curve
+        # matches = np.where(basenames == known)[0]
+        try:
+            kidx = resolve_unique_index(known, name_to_idxs, fullpath_to_idx)
+            if not kidx:
+                print(f"Warning: known curve {known} not found; skipping histogram.")
+                continue
+        except IndexError:
+            print(f"Warning: known curve {known} not found; skipping histogram.")
+            continue
+
+
+        # top-K excluding self
+        row = sims[kidx].copy()
+        row[kidx] = -np.inf
+        top = np.argsort(row)[::-1][:n_similar]
+        top_clusters = cluster_labels[top]
+
+        # count
+        counts = pd.Series(top_clusters).value_counts().sort_index()
+        # write CSV
+        csv_path = os.path.join(hits_dir, f"{os.path.splitext(known)[0]}_similar_cluster_counts.csv")
+        counts.to_csv(csv_path, header=['count'])
+        print(f"→ wrote {csv_path}")
+
+        # plot histogram (bars colored by the **cluster palette**)
+        labs = counts.index.tolist()
+        idxs = [label_to_idx[int(l)] for l in labs]
+        colors = [cmap(norm(i)) for i in idxs]
+
+        plt.figure(figsize=(10, 4))
+        plt.bar([str(l) for l in labs], counts.values, color=colors)
+        plt.yscale('log')
+        plt.xlabel("Cluster ID")
+        plt.ylabel(f"Top-{n_similar} similar (count, log)")
+        title_suffix = f"(known curve cluster: {cluster_labels[kidx]})"
+        plt.title(f"Where most-similar to {known} land {title_suffix}")
+        plt.tight_layout()
+
+        out_png = os.path.join(hits_dir, f"{os.path.splitext(known)[0]}_similar_cluster_hist.png")
+        plt.savefig(out_png, dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"→ wrote {out_png}")
+
 def main():
     """Main function to run the analysis pipeline."""
     print("Starting light curve analysis pipeline...")
@@ -1636,6 +1636,11 @@ def main():
         # Load features
         features_df = load_features()
         print(f"Loaded {len(features_df)} light curves")
+
+        file_paths, basenames, name_to_idxs, fullpath_to_idx = build_index_maps(features_df)
+
+        _, _, name_to_idxs, _ = build_index_maps(features_df)
+        warn_on_duplicate_basenames(name_to_idxs)
 
         # Extract light curves from features DataFrame
         light_curves = [pd.DataFrame({
@@ -1689,6 +1694,36 @@ def main():
             print("Warning: no known curves found in features_df!")
 
         # Detect outliers
+        numeric_cols = features_df.select_dtypes(include='number').columns.tolist()
+        features_df = features_df.dropna(subset=numeric_cols)
+
+        # Extract bexvar values from each row using feature_names + feature_values
+        print(f"{len(features_df)} light curves before bexvar filtering.")
+        bexvar_values = features_df.apply(
+            lambda row: row['feature_values'][row['feature_names'].index('bexvar')]
+            if 'bexvar' in row['feature_names'] else 0,
+            axis=1
+        ).values
+
+        # Compute empirical 3σ cutoff (99.7 percentile)
+        from scipy.stats import scoreatpercentile
+        threshold_3sigma = scoreatpercentile(bexvar_values, 93)
+        print(f"Empirical 93% threshold for bexvar: {threshold_3sigma:.4f}")
+
+        # Filter out curves below the threshold
+        features_df = features_df[
+            features_df.apply(
+                lambda row: row['feature_values'][row['feature_names'].index('bexvar')] >= threshold_3sigma
+                if 'bexvar' in row['feature_names'] else False,
+                axis=1
+            )
+        ].copy()
+
+        print(f"Retained {len(features_df)} light curves after bexvar filtering.")
+
+        features_df = filter_features(features_df, SELECTED_FEATURES_FOR_CLUSTERING)
+
+
         results = detect_outliers(features_df)
         print("Finished Detecting Outliers")
 
@@ -1698,12 +1733,9 @@ def main():
         paths       = features_df['file_path'].values
         visualize_features(scaled_arr, outlier_mask, paths)
 
-        # Run UMAP clustering
-        umap_labels, feature_matrix, umap_embedding = run_umap_clustering(features_df, light_curves)
 
         # Run HDBSCAN clustering
-        # hdbscan_labels, _ = run_hdbscan_clustering(features_df)
-        hdbscan_labels, mat = run_hdbscan_clustering(
+        hdbscan_labels, feature_matrix, umap_embedding = run_hdbscan_clustering(
                         features_df,
                         two_stage=True,
                         size_threshold=10000
@@ -1716,14 +1748,8 @@ def main():
             output_dir=DATA_DIR + f'/{number}/hdbscan_data'
         )
 
-        save_cluster_labels(
-            features_df=features_df,
-            hdbscan_labels=umap_labels,
-            output_dir=DATA_DIR + f'/{number}/umap_data'
-        )
-
         # single‐pass
-        labels_single, _ = run_hdbscan_clustering(
+        labels_single, _, umap_embedding_single= run_hdbscan_clustering(
             features_df,
             two_stage=False,
             output_file=os.path.join(HDBSCAN_OUTPUT_DIR, "hdbscan_single_pass.png")
@@ -1731,13 +1757,30 @@ def main():
         save_cluster_size_histogram(paths, labels_single, HDBSCAN_OUTPUT_DIR, "single_pass")
 
         # two‐stage
-        labels_two, _ = run_hdbscan_clustering(
+        labels_two, _, umap_embedding_two = run_hdbscan_clustering(
             features_df,
             two_stage=True,
             size_threshold=10000,
             output_file=os.path.join(HDBSCAN_OUTPUT_DIR, "hdbscan_two_stage.png")
         )
         save_cluster_size_histogram(paths, labels_two, HDBSCAN_OUTPUT_DIR, "two_stage")
+
+        histogram_similar_curve_cluster_hits(
+            features_df=features_df,
+            cluster_labels=labels_two,          # choose which labels you want to analyze
+            known_light_curves=KNOWN_LIGHT_CURVES,
+            output_dir=HDBSCAN_OUTPUT_DIR,
+            n_similar=200                       # or your preferred K
+        )
+
+        cluster_plots_dir = plot_cluster_samples(
+            light_curves=light_curves,
+            features_df=features_df,
+            cluster_labels=labels_two,
+            output_dir=HDBSCAN_OUTPUT_DIR,
+            timestamp=timestamp
+        )
+        print(f"Cluster plots: {cluster_plots_dir}")
 
         # --- NEW: sample 100 light‐curves from the noise cluster (-1) into 4 files of 25 ---
         noise_idxs = np.where(labels_two == -1)[0]
@@ -1795,7 +1838,7 @@ def main():
         # (make sure you still have `umap_embedding` from your UMAP step)
         for orig in clusters_that_split:
             mask    = (labels_single == orig)
-            coords  = umap_embedding[mask]   # shape (n_points, 2)
+            coords  = umap_embedding_two[mask]   # shape (n_points, 2)
             new_lbls = labels_two[mask]
 
             plt.figure(figsize=(6,5))
@@ -1811,65 +1854,71 @@ def main():
             plt.tight_layout()
             plt.show()
 
-            # Create correlation matrix and pairplot
-            feature_names = features_df['feature_names'].iloc[0]
-            corr_matrix_file = plot_correlation_matrix(feature_matrix, feature_names)
-            # pairplot_file1 = plot_feature_pairplot(feature_matrix, feature_names, hdbscan_labels, remove_noise=False)
-            # pairplot_file2 = plot_feature_pairplot(feature_matrix, feature_names, hdbscan_labels, remove_noise=True)
-            # Create grid plots of outliers and regular curves
-            grid_plots_dir = create_grid_plots(
-                light_curves, results, FEATURE_OUTPUT_DIR, timestamp
-            )
+        # Create correlation matrix and pairplot
+        feature_names = features_df['feature_names'].iloc[0]
+        corr_matrix_file = plot_correlation_matrix(feature_matrix, feature_names)
+        # pairplot_file1 = plot_feature_pairplot(feature_matrix, feature_names, hdbscan_labels, remove_noise=False)
+        # pairplot_file2 = plot_feature_pairplot(feature_matrix, feature_names, hdbscan_labels, remove_noise=True)
+        # Create grid plots of outliers and regular curves
+        grid_plots_dir = create_grid_plots(
+            light_curves, results, FEATURE_OUTPUT_DIR, timestamp
+        )
 
-            # Create cluster sample plots
-            # cluster_plots_dir = plot_cluster_samples(
-            #     light_curves, features_df, hdbscan_labels, HDBSCAN_OUTPUT_DIR, timestamp
-            # )
+        # Plot significant curves (known light curves) with their clusters
+        sig_plots_dir = plot_significant_curves_with_cluster(
+            KNOWN_LIGHT_CURVES, light_curves, features_df, hdbscan_labels, HDBSCAN_OUTPUT_DIR
+        )
 
-            # Plot significant curves (known light curves) with their clusters
-            sig_plots_dir = plot_significant_curves_with_cluster(
-                KNOWN_LIGHT_CURVES, light_curves, features_df, hdbscan_labels, HDBSCAN_OUTPUT_DIR
-            )
+        # Plot similar curves to known light curves
+        similar_plots_dir = plot_top_similar_curves(
+            light_curves, features_df, KNOWN_LIGHT_CURVES, FEATURE_OUTPUT_DIR
+        )
 
-            # Plot similar curves to known light curves
-            similar_plots_dir = plot_top_similar_curves(
-                light_curves, features_df, KNOWN_LIGHT_CURVES, FEATURE_OUTPUT_DIR
-            )
+        # Analyze feature importance for HDBSCAN clusters
+        analyze_cluster_feature_importance(
+            feature_matrix, feature_names, hdbscan_labels
+        )
 
-            # Analyze feature importance for HDBSCAN clusters
-            analyze_cluster_feature_importance(
-                feature_matrix, feature_names, hdbscan_labels
-            )
+        print(f"\nAnalysis pipeline completed in {time.time() - start_time:.2f} seconds")
+        print("\nOutput directories:")
+        print(f"Grid plots: {grid_plots_dir}")
+        # print(f"Cluster plots: {cluster_plots_dir}")
+        print(f"Significant curve plots: {sig_plots_dir}")
+        print(f"Similar curves plots: {similar_plots_dir}")
+        print(f"Correlation matrix: {corr_matrix_file}")
+        # print(f"Feature pairplot (Noise Included): {pairplot_file1}")
+        # print(f"Feature pairplot (Noise Excluded): {pairplot_file2}")
 
-            print(f"\nAnalysis pipeline completed in {time.time() - start_time:.2f} seconds")
-            print("\nOutput directories:")
-            print(f"Grid plots: {grid_plots_dir}")
-            # print(f"Cluster plots: {cluster_plots_dir}")
-            print(f"Significant curve plots: {sig_plots_dir}")
-            print(f"Similar curves plots: {similar_plots_dir}")
-            print(f"Correlation matrix: {corr_matrix_file}")
-            # print(f"Feature pairplot (Noise Included): {pairplot_file1}")
-            # print(f"Feature pairplot (Noise Excluded): {pairplot_file2}")
+        # Extract UMAP embedding coordinates for web visualization
+        umap_x = umap_embedding_two[:, 0] if umap_embedding_two is not None else None
+        umap_y = umap_embedding_two[:, 1] if umap_embedding_two is not None else None
+        umap_coords = (umap_x, umap_y) if umap_x is not None and umap_y is not None else None
 
-            # Extract UMAP embedding coordinates for web visualization
-            umap_x = umap_embedding[:, 0] if umap_embedding is not None else None
-            umap_y = umap_embedding[:, 1] if umap_embedding is not None else None
-            umap_coords = (umap_x, umap_y) if umap_x is not None and umap_y is not None else None
+        # Make UMAP color-by-feature plots for all features currently in features_df
+        _ = plot_umap_colored_by_feature(
+            features_df=features_df,
+            umap_embedding=umap_embedding_two,   # reuse the embedding you already computed
+            feature_list="all",              # or e.g. ['bexvar', 'skewness', 'kurtosis']
+            output_dir=UMAP_OUTPUT_DIR,
+            highlight_known=True,
+            robust_color_limits=True,
+            log_color=False
+        )
 
 
-            # Save results for web visualization using HDF5
-            # features_file, light_curves_file = save_analysis_results(
-            #     features_df,
-            #     umap_labels,
-            #     hdbscan_labels,
-            #     results,
-            #     feature_matrix,
-            #     feature_names,
-            #     output_dir=DATA_DIR,
-            #     umap_embedding=umap_embedding
-            # )
-            # print(f"Saved features to: {features_file}")
-            # print(f"Saved light curves to: {light_curves_file}")
+        # Save results for web visualization using HDF5
+        # features_file, light_curves_file = save_analysis_results(
+        #     features_df,
+        #     umap_labels,
+        #     hdbscan_labels,
+        #     results,
+        #     feature_matrix,
+        #     feature_names,
+        #     output_dir=DATA_DIR,
+        #     umap_embedding=umap_embedding
+        # )
+        # print(f"Saved features to: {features_file}")
+        # print(f"Saved light curves to: {light_curves_file}")
 
     except Exception as e:
         print(f"Error in analysis pipeline: {str(e)}")
@@ -1899,6 +1948,155 @@ def save_cluster_labels(features_df, hdbscan_labels, output_dir):
     print(f"Cluster assignments saved to: {output_file}")
     return output_file
 
+def plot_umap_colored_by_feature(
+    features_df,
+    umap_embedding=None,                 # (n_samples, 2) array; if None we compute it from features_df
+    feature_list="all",                  # "all" or list of feature names
+    output_dir=UMAP_OUTPUT_DIR,
+    n_neighbors=DEFAULT_N_NEIGHBORS,
+    min_dist=DEFAULT_MIN_DIST,
+    highlight_known=True,
+    robust_color_limits=True,            # use 1–99th percentile for colorbar limits (helps with outliers)
+    log_color=False                      # log-scale colorbar for highly skewed features
+):
+    """
+    Create UMAP scatter plots colored by individual feature values.
+
+    Saves one PNG per feature in: <output_dir>/umap_color_by/<feature>.png
+
+    Args:
+        features_df (pd.DataFrame): Must contain 'feature_values', 'feature_names', 'file_path'
+        umap_embedding (np.ndarray|None): If None, UMAP will be computed from filtered features_df
+        feature_list (str|list): "all" for every feature in features_df, or an explicit list of names
+        highlight_known (bool): Draw KNOWN_LIGHT_CURVES as star markers
+        robust_color_limits (bool): Clip colormap to [1st, 99th] percentiles to reduce saturation
+        log_color (bool): Apply log scaling to color values (small epsilon added to avoid log(0))
+    """
+    import os
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from sklearn.preprocessing import RobustScaler, normalize
+    import umap as _umap
+
+    os.makedirs(output_dir, exist_ok=True)
+    outdir = os.path.join(output_dir, "umap_color_by")
+    os.makedirs(outdir, exist_ok=True)
+
+    # --- Prepare feature matrix (post-filter) ---
+    # Assumes filter_features(...) already made every row share same feature_names ordering.
+    feature_names = features_df['feature_names'].iloc[0]
+    feature_matrix = np.vstack(features_df['feature_values'].values)
+    file_paths = features_df['file_path'].values
+
+    # Determine which features to plot
+    if feature_list == "all":
+        names_to_plot = list(feature_names)
+    else:
+        # keep only valid ones
+        names_to_plot = [f for f in feature_list if f in feature_names]
+        missing = set(feature_list) - set(names_to_plot)
+        if missing:
+            print(f"Warning: features not found and skipped: {sorted(missing)}")
+
+    # --- UMAP embedding (if not supplied) ---
+    if umap_embedding is None:
+        scaler = RobustScaler()
+        scaled = scaler.fit_transform(feature_matrix)
+        scaled = np.nan_to_num(scaled, nan=0.0)
+        normed = normalize(scaled, norm='l2')
+
+        reducer = _umap.UMAP(
+            n_neighbors=n_neighbors,
+            min_dist=min_dist,
+            n_components=2,
+            metric='euclidean',
+            random_state=42
+        )
+        umap_embedding = reducer.fit_transform(normed)
+
+    emb = umap_embedding
+    assert emb.shape[1] == 2, "umap_embedding must be (n_samples, 2)"
+
+    # Known curve indices
+    known_idxs = []
+    if highlight_known:
+        basenames = [os.path.basename(p) for p in file_paths]
+        known_set = set(KNOWN_LIGHT_CURVES)
+        known_idxs = [i for i, b in enumerate(basenames) if b in known_set]
+
+    # Helper to extract a feature column by name
+    name_to_col = {name: j for j, name in enumerate(feature_names)}
+
+    for fname in names_to_plot:
+        col = name_to_col[fname]
+        vals = feature_matrix[:, col].astype(float)
+        vals = np.nan_to_num(vals, nan=np.nanmedian(vals) if np.isfinite(np.nanmedian(vals)) else 0.0)
+
+        # Optional log color
+        if log_color:
+            eps = max(1e-12, np.nanmin(vals[vals > 0.0]) if np.any(vals > 0.0) else 1e-12)
+            color_vals = np.log(vals + eps)
+            cbar_label = f"log({fname})"
+        else:
+            color_vals = vals
+            cbar_label = fname
+
+        # Robust color limits to avoid a few outliers blowing out the colormap
+        vmin = vmax = None
+        if robust_color_limits:
+            lo = np.percentile(color_vals, 1)
+            hi = np.percentile(color_vals, 99)
+            if np.isfinite(lo) and np.isfinite(hi) and hi > lo:
+                vmin, vmax = lo, hi
+
+        plt.figure(figsize=(12, 8))
+
+        # Main scatter
+        sc = plt.scatter(
+            emb[:, 0], emb[:, 1],
+            c=color_vals,
+            s=35, alpha=0.85,
+            cmap='viridis',
+            edgecolors='white',
+            linewidths=0.3,
+            vmin=vmin, vmax=vmax,
+            label='Light curves'
+        )
+
+        # Known curves as stars on top
+        if highlight_known and known_idxs:
+            plt.scatter(
+                emb[known_idxs, 0], emb[known_idxs, 1],
+                c=color_vals[known_idxs],
+                cmap='viridis',
+                marker='*',
+                s=220,
+                edgecolors='black',
+                linewidths=1.0,
+                vmin=vmin, vmax=vmax,
+                label='Known curves'
+            )
+
+        cbar = plt.colorbar(sc)
+        cbar.set_label(cbar_label)
+
+        plt.xlabel("UMAP 1")
+        plt.ylabel("UMAP 2")
+        plt.title(f"UMAP colored by {fname}")
+        plt.grid(alpha=0.3)
+
+        # Avoid duplicate legend entries
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys(), loc='best', bbox_to_anchor=(1.02, 1), borderaxespad=0.)
+
+        plt.tight_layout()
+        outfile = os.path.join(outdir, f"umap_color_by_{fname}.png")
+        plt.savefig(outfile, dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"Saved: {outfile}")
+
+    return outdir
 
 if __name__ == "__main__":
     main()

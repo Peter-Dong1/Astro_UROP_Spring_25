@@ -941,27 +941,27 @@ def main():
     generate_cluster_feature_histograms(features_df, run_num=237)
 
     # Define run numbers to analyze
-    run_numbers = range(237, 238)  # 210 to 222 inclusive
+    run_numbers = range(306, 307)  # 210 to 222 inclusive
 
     print("Starting analysis of similar curves and cluster assignments...")
     analyze_cluster_assignments(features_df, run_numbers)
 
-    print("\nGenerating sig_nev histogram...")
-    analyze_sig_nev_and_examples(features_df)
+    # print("\nGenerating sig_nev histogram...")
+    # analyze_sig_nev_and_examples(features_df)
 
 
-    with open(SIG_NEV_FILE, 'rb') as f:
-        sig_map = pickle.load(f)
+    # with open(SIG_NEV_FILE, 'rb') as f:
+    #     sig_map = pickle.load(f)
     # plot_sig_nev_sample_grid(sig_map, features_df, 0, 0.01)
     # plot_sig_nev_sample_grid(sig_map, features_df, 0.01, 1)
-    plot_sig_nev_sample_grid(sig_map, features_df, 0, 0.001)
+    # plot_sig_nev_sample_grid(sig_map, features_df, 0, 0.001)
 
     print("\nAnalysis complete!")
     print(f"Cluster assignments saved to: {CLUSTER_ASSIGNMENTS_DIR}")
     print(f"Feature histograms saved to: {HISTOGRAMS_DIR}")
-    print(f"SIG_NEV histograms saved to: {SIG_NEV_PLOT_DIR}")
-    print("\nPlotting SIG_NEV by top-3 clusters...")
-    analyze_sig_nev_by_cluster(features_df, run_num=237)
+    # print(f"SIG_NEV histograms saved to: {SIG_NEV_PLOT_DIR}")
+    # print("\nPlotting SIG_NEV by top-3 clusters...")
+    # analyze_sig_nev_by_cluster(features_df, run_num=237)
 
 if __name__ == "__main__":
     main()

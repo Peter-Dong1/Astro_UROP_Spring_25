@@ -10,7 +10,7 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=pdong@mit.edu
 
-#SBATCH --array=0-11  # Run 12 jobs: array indices 0 through 11
+#SBATCH --array=0-28  # Run 12 jobs: array indices 0 through 11
 
 source /home/software/anaconda3/2023.07/etc/profile.d/conda.sh
 conda activate myenv

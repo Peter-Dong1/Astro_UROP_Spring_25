@@ -5,10 +5,10 @@ LOAD_SIZE = 'all'
 # Directory paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data") + '/' + str(LOAD_SIZE)
-PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processedbatch")
+PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processed")
 
 # Feature extraction output directory
-number = 250
+number = 501
 PLOT_DIR = os.path.join(BASE_DIR, "plots")
 FILE_PLOT_DIR = os.path.join(PLOT_DIR,(str(LOAD_SIZE)) + str(number))
 FEATURE_OUTPUT_DIR = os.path.join(FILE_PLOT_DIR, "features")
@@ -41,6 +41,21 @@ DEFAULT_N_COMPONENTS = 2
 #TODO
 # Epsilon - Larger
 # Change distances for HDBSCAN to cosine simlarty
+SELECTED_FEATURES_FOR_CLUSTERING = [
+"weighted_mean", "weighted_variance", "lag1_autocorr", "hurst_exp",
+"mean_rise_fall_ratio", "stetson_k", "bexvar", "mean_var", "ampl_sig"
+]
+
+# SELECTED_FEATURES_FOR_CLUSTERING = [
+# "weighted_mean", "weighted_variance", "lag1_autocorr", "hurst_exp",
+# "mean_rise_fall_ratio", "stetson_k", "bexvar", "mean_var", "ampl_sig"
+# ]
+
+# SELECTED_FEATURES_FOR_CLUSTERING = [
+# "weighted_mean", "lag1_autocorr", "hurst_exp",
+# "mean_rise_fall_ratio", "bexvar", "ampl_sig"
+# ]
 
 # File for storing extracted features
-FEATURES_FILE = os.path.join(PROCESSED_DATA_DIR, "feature.pkl")
+# FEATURES_FILE = os.path.join(PROCESSED_DATA_DIR, "features_clipped_SIG.pkl")
+FEATURES_FILE = "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/amp_max_features/features.pkl"
