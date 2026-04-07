@@ -8,7 +8,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data") + '/' + str(LOAD_SIZE)
 PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processed")
 
 # Feature extraction output directory
-number = 501
+number = 1000
 PLOT_DIR = os.path.join(BASE_DIR, "plots")
 FILE_PLOT_DIR = os.path.join(PLOT_DIR,(str(LOAD_SIZE)) + str(number))
 FEATURE_OUTPUT_DIR = os.path.join(FILE_PLOT_DIR, "features")
