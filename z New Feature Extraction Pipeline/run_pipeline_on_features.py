@@ -1266,11 +1266,17 @@ def plot_top_similar_curves(light_curves, features_df, known_light_curves, outpu
         plot_light_curve(axes[0], light_curves[known_idx],
                         title="Reference Curve", is_outlier=True)
 
+        axes[0].set_title(f"[REF]\n{os.path.basename(file_paths[known_idx])}", fontsize=7)
+
         # Plot similar curves
         for i, (idx, sim_score) in enumerate(zip(top_indices, top_similarities)):
             if i + 1 < len(axes):  # +1 because we used the first plot for reference
                 plot_light_curve(axes[i+1], light_curves[idx],
                                title=f'Similarity: {sim_score:.3f}')
+                axes[i+1].set_title(
+                    f"Sim: {sim_score:.3f}\n{os.path.basename(file_paths[idx])}",
+                    fontsize=7
+                )
 
         # Hide unused subplots
         for i in range(len(top_indices) + 1, len(axes)):
@@ -1599,6 +1605,22 @@ def histogram_similar_curve_cluster_hits(
         top = np.argsort(row)[::-1][:n_similar]
         top_clusters = cluster_labels[top]
 
+        # Save ranked CSV of top-N similar curves
+        top_paths = file_paths[top]
+        top_names = [os.path.basename(p) for p in top_paths]
+        top_sims  = row[top]   # cosine similarity values (row already has self excluded)
+
+        similar_df = pd.DataFrame({
+            'rank':             range(1, len(top) + 1),
+            'file_name':        top_names,
+            'file_path':        top_paths,
+            'cosine_similarity': top_sims,
+            'cluster_label':    top_clusters,
+        })
+        csv_ranked = os.path.join(hits_dir, f"{os.path.splitext(known)[0]}_top{n_similar}_similar.csv")
+        similar_df.to_csv(csv_ranked, index=False)
+        print(f"→ wrote {csv_ranked}")
+
         # count
         counts = pd.Series(top_clusters).value_counts().sort_index()
         # write CSV
@@ -1698,26 +1720,27 @@ def main():
         features_df = features_df.dropna(subset=numeric_cols)
 
         # Extract bexvar values from each row using feature_names + feature_values
-        print(f"{len(features_df)} light curves before bexvar filtering.")
-        bexvar_values = features_df.apply(
-            lambda row: row['feature_values'][row['feature_names'].index('bexvar')]
-            if 'bexvar' in row['feature_names'] else 0,
-            axis=1
-        ).values
+        # print(f"{len(features_df)} light curves before bexvar filtering.")
+        # bexvar_values = features_df.apply(
+        #     lambda row: row['feature_values'][row['feature_names'].index('bexvar')]
+        #     if 'bexvar' in row['feature_names'] else 0,
+        #     axis=1
+        # ).values
 
-        # Compute empirical 3σ cutoff (99.7 percentile)
-        from scipy.stats import scoreatpercentile
-        threshold_3sigma = scoreatpercentile(bexvar_values, 93)
-        print(f"Empirical 93% threshold for bexvar: {threshold_3sigma:.4f}")
+        #TODO: commented out THE FILTERING
+        # # Compute empirical 3σ cutoff (99.7 percentile)
+        # from scipy.stats import scoreatpercentile
+        # threshold_3sigma = scoreatpercentile(bexvar_values, 93)
+        # print(f"Empirical 93% threshold for bexvar: {threshold_3sigma:.4f}")
 
         # Filter out curves below the threshold
-        features_df = features_df[
-            features_df.apply(
-                lambda row: row['feature_values'][row['feature_names'].index('bexvar')] >= threshold_3sigma
-                if 'bexvar' in row['feature_names'] else False,
-                axis=1
-            )
-        ].copy()
+        # features_df = features_df[
+        #     features_df.apply(
+        #         lambda row: row['feature_values'][row['feature_names'].index('bexvar')] >= threshold_3sigma
+        #         if 'bexvar' in row['feature_names'] else False,
+        #         axis=1
+        #     )
+        # ].copy()
 
         print(f"Retained {len(features_df)} light curves after bexvar filtering.")
 
