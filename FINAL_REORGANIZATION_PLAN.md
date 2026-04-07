@@ -1367,4 +1367,3 @@ The most critical item for your supervisors is the cosine similarity lists. Make
 
 Good luck! 🚀
 ```
-
