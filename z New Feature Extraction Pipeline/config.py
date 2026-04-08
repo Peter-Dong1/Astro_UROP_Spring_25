@@ -56,6 +56,8 @@ SELECTED_FEATURES_FOR_CLUSTERING = [
 # "mean_rise_fall_ratio", "bexvar", "ampl_sig"
 # ]
 
-# File for storing extracted features
-# FEATURES_FILE = os.path.join(PROCESSED_DATA_DIR, "features_clipped_SIG.pkl")
-FEATURES_FILE = "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/amp_max_features/features.pkl"
+# Extracted features directory (used by PATH B batch jobs and consolidate script)
+EXTRACTED_FEATURES_DIR = os.path.join(BASE_DIR, "extracted_features")
+
+# File for storing extracted features (final output of both PATH A and PATH B)
+FEATURES_FILE = os.path.join(BASE_DIR, "data", "all", "amp_max_features", "features.pkl")

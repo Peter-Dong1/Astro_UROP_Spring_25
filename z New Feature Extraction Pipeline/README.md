@@ -22,47 +22,47 @@ This README documents every file in this directory: what it does, what it depend
 
 There are two ways to run the full pipeline. Both end at the same analysis step.
 
-### Path A — Single Node (everything in one job)
+### Path A — Single Node (11 features, one job)
 
 ```
-get_features.slurm
+sbatch slurm/path_a.slurm
     └─ run_feature_extraction.py
-           └─ produces: data/all/processed/features_chunk_*.pkl
+           └─ produces: data/all/processed/features_chunk_*.pkl  (intermediate)
                         data/all/amp_max_features/features.pkl   ← FEATURES_FILE
                         data/all/amp_max_features/SIG_NEV_mappings.pkl
 
-analyze_features.slurm
+sbatch slurm/analyze.slurm
     └─ run_pipeline_on_features.py
            └─ produces: all plots + CSVs + HDF5s (see §Analysis)
 ```
 
-### Path B — Distributed Batch (splits load across 29 SLURM array tasks)
+**When to use**: Simpler setup; best if you have access to a large single node (64 CPUs, 128 GB).
+
+### Path B — Distributed Batch (11 features, 4 steps — works within per-user job limits)
 
 ```
-Step 1:  split_curves.slurm
+Step 1:  sbatch slurm/path_b_1_split.slurm        (~1h, 4 GB)
              └─ split_curves.py
-                    └─ produces: data/split_light_curves/light_curves_partition_00..28.pkl
+                    └─ produces: data/split_light_curves/light_curves_partition_00..27.pkl
+                                 (28 files, each a list of FITS path strings)
 
-Step 2:  run_chunks.slurm  (array 0-28, each task processes one partition)
+Step 2:  sbatch slurm/path_b_2_extract.slurm      (array 0-28, up to 48h each, 128 GB)
              └─ batch_feature_extraction.py --chunk-file ... --chunk-id ... --output-dir ...
                     └─ produces: extracted_features/features_<fits_basename>.pkl  (one per curve)
 
-Step 3:  consol_feat.slurm
+Step 3:  sbatch slurm/path_b_3_consolidate.slurm  (12h, 128 GB)
              └─ consolidate_features.py
-                    └─ produces: data/all/bexvar_features/features.pkl
+                    └─ produces: data/all/amp_max_features/features.pkl  ← FEATURES_FILE
 
-Step 4:  append_feat.slurm
-             └─ append_new_features.py
-                    └─ produces: data/all/amp_max_features/features.pkl   ← FEATURES_FILE
-
-Step 5:  analyze_features.slurm
+Step 4:  sbatch slurm/analyze.slurm               (12h, 180 GB)
              └─ run_pipeline_on_features.py
                     └─ produces: all plots + CSVs + HDF5s (see §Analysis)
 ```
 
-> **Note**: After step 4 (or after Path A), `FEATURES_FILE` in `config.py` must point to the correct
-> `features.pkl`. The path is currently hardcoded as:
-> `/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/amp_max_features/features.pkl`
+**When to use**: Works within MIT Engaging's per-user job limits. Steps must be run in order.
+Steps 1 and 3 are cheap single jobs; Step 2 is the heavy array job (29 independent tasks).
+
+> **`FEATURES_FILE` path**: now computed from `BASE_DIR` in `config.py` — no hardcoded paths.
 
 ---
 
@@ -75,11 +75,14 @@ z New Feature Extraction Pipeline/
 ├── helper.py                      # FITS loading utilities
 ├── bexvar_ero.py                  # Bayesian excess variance algorithm
 │
-├── run_feature_extraction.py      # Path A: single-node feature extraction
-├── batch_feature_extraction.py    # Path B: per-chunk batch extraction
-├── split_curves.py                # Path B step 1: split all curves into partitions
+├── lib/
+│   ├── __init__.py
+│   └── feature_functions.py       # All shared feature logic (11 features, both paths)
+│
+├── run_feature_extraction.py      # Path A: single-node extraction (~80 lines)
+├── batch_feature_extraction.py    # Path B step 2: per-partition extraction (~75 lines)
+├── split_curves.py                # Path B step 1: split FITS paths into partitions
 ├── consolidate_features.py        # Path B step 3: merge per-curve pickles
-├── append_new_features.py         # Path B step 4: add ampl_sig feature
 │
 ├── run_pipeline_on_features.py    # Main analysis: outliers, HDBSCAN, UMAP, plots
 ├── analyze_similar_curves.py      # Secondary: similarity + histograms for known curves
@@ -91,13 +94,12 @@ z New Feature Extraction Pipeline/
 ├── check_nans.py                  # Debug: report NaN counts in features.pkl
 ├── test_split_curves.py           # Debug: count total curves across partition files
 │
-├── get_features.slurm             # SLURM: run run_feature_extraction.py (single node)
-├── batch_get_features.slurm       # SLURM: array job variant of get_features.slurm
-├── split_curves.slurm             # SLURM: run split_curves.py
-├── run_chunks.slurm               # SLURM: array[0-28] for batch_feature_extraction.py
-├── consol_feat.slurm              # SLURM: run consolidate_features.py
-├── append_feat.slurm              # SLURM: run append_new_features.py
-├── analyze_features.slurm         # SLURM: run run_pipeline_on_features.py
+├── slurm/
+│   ├── path_a.slurm               # SLURM: Path A (1 node, 64 CPUs, 128 GB, 12h)
+│   ├── path_b_1_split.slurm       # SLURM: Path B step 1 (4 CPUs, 4 GB, 1h)
+│   ├── path_b_2_extract.slurm     # SLURM: Path B step 2 (array 0-28, 85 CPUs, 128 GB, 48h)
+│   ├── path_b_3_consolidate.slurm # SLURM: Path B step 3 (4 CPUs, 128 GB, 12h)
+│   └── analyze.slurm              # SLURM: final analysis (4 CPUs, 180 GB, 12h)
 │
 ├── data/                          # Generated data (not tracked in git)
 │   ├── all/
@@ -798,8 +800,9 @@ extracted_features/                       ← Path B per-curve pickles
 
 ## Feature Reference
 
-The following features are extracted per light curve (medium band, 0.6–2.3 keV) by both
-`run_feature_extraction.py` and `batch_feature_extraction.py`:
+All 11 features are extracted by both paths. Shared logic lives in `lib/feature_functions.py`.
+
+The following features are extracted per light curve (medium band, 0.6–2.3 keV):
 
 | Feature | Description | Default if failed |
 |---|---|---|
@@ -814,10 +817,6 @@ The following features are extracted per light curve (medium band, 0.6–2.3 keV
 | `bexvar` | Bayesian excess variance: median of the posterior `log(σ)` from nested sampling | 0 |
 | `mean_var` | Mean variance from `light_curve.MeanVariance()` | 0 |
 
-The following feature is added later by `append_new_features.py`:
-
-| Feature | Description | Default if failed |
-|---|---|---|
 | `ampl_sig` | Amplitude significance: `((R_max - σ_max) - (R_min + σ_min)) / sqrt(σ_max² + σ_min²)` | 0 |
 
 The **9 features used for clustering** (from `SELECTED_FEATURES_FOR_CLUSTERING` in `config.py`):
@@ -831,13 +830,15 @@ The `excess_var` and `beyond1std` features are extracted but not used in the clu
 
 ## Known Issues & Notes
 
-- **Hardcoded paths**: `FEATURES_FILE` in `config.py`, and the input/output paths in
-  `consolidate_features.py` and `append_new_features.py`, are hardcoded to `/home/pdong/Astro UROP/`.
-  Update these before running in a different environment.
+- **Hardcoded paths resolved**: `FEATURES_FILE` and `EXTRACTED_FEATURES_DIR` in `config.py`
+  are now derived from `BASE_DIR` (the pipeline directory itself). No `/home/pdong/` paths remain
+  in the extraction scripts. `run_pipeline_on_features.py` and `analyze_similar_curves.py` may
+  still contain hardcoded paths in their output subdirectory logic — check before running in a
+  new environment.
 
-- **`batch_get_features.slurm` array job splitting**: The `--job-id` / `--num-jobs` argument
-  handling is present in `run_feature_extraction.py` but the corresponding chunk-routing logic
-  is commented out. The script currently ignores these flags and processes all curves regardless.
+- **`--job-id` / `--num-jobs` flags**: Defined in `run_feature_extraction.py`'s `parse_args()`
+  for future SLURM array splitting of PATH A. Currently unused — the script uses
+  `ProcessPoolExecutor` internally instead.
 
 - **`bexvar` is slow**: It runs `ultranest` nested sampling for every light curve. This is the
   dominant cost of feature extraction. Each curve takes ~seconds; the full dataset of ~300k curves

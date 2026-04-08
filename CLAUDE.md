@@ -32,15 +32,21 @@ All SLURM scripts use the `myenv` conda environment. Jobs are submitted via:
 sbatch <script>.slurm
 ```
 
-**Available SLURM scripts**:
+**Deep learning SLURM scripts** (in repo root):
 - `rnn.slurm` - Train RNN VAE model
 - `trans.slurm` - Train Transformer VAE model
-- `feature.slurm` - Extract statistical features
-- `helper.slurm` - Helper/utility jobs
 - `plot_rnn.slurm` - Generate RNN model visualizations
 
+**Feature extraction SLURM scripts** (all in `z New Feature Extraction Pipeline/`):
+- `get_features.slurm` - Path A single-node extraction (not currently used — missing `ampl_sig`)
+- `split_curves.slurm` - Path B step 1: partition all light curves
+- `run_chunks.slurm` - Path B step 2: array job (0–28), extract features per partition
+- `consol_feat.slurm` - Path B step 3: merge per-curve pickles
+- `append_feat.slurm` - Path B step 4: add `ampl_sig` feature
+- `analyze_features.slurm` - Final analysis (both paths)
+
 **SLURM Configuration**:
-- Partition: `mit_normal_gpu` (GPU jobs) or `sched_mit_hill`
+- Partition: `mit_normal_gpu` (GPU jobs) or `mit_normal` (CPU feature extraction)
 - Standard location: `/home/pdong/Astro\ UROP/`
 - Logs stored in `logs/` directory
 
@@ -66,23 +72,35 @@ Returns pandas DataFrames with columns: `TIME`, `TIMEDEL`, `RATE`, `ERRM`, `ERRP
 - Clustering: HDBSCAN with UMAP dimensionality reduction
 - Uses `light_curve` package for advanced features
 
-**New Pipeline** (`z New Feature Extraction Pipeline/`):
-- `config.py` - Configuration with paths and parameters
-- `run_feature_extraction.py` - Main feature extraction script supporting parallel jobs
-- `batch_feature_extraction.py` - Process light curves in batches
-- `consolidate_features.py` - Merge features from parallel jobs
+**New Pipeline** (`z New Feature Extraction Pipeline/`) — **currently in use**:
+- `config.py` - Configuration with paths, parameters, and `SELECTED_FEATURES_FOR_CLUSTERING`
+- `helper.py` - Pipeline-specific FITS loader (adds FRACEXP, COUNTS, BACKCOUNTS, BACKRATIO)
+- `run_feature_extraction.py` - Path A single-node extraction (**10 features, not current**)
+- `batch_feature_extraction.py` - Path B per-partition extraction (10 features)
+- `split_curves.py` - Path B step 1: split all curves into 28 partitions
+- `consolidate_features.py` - Path B step 3: merge per-curve pickles
+- `append_new_features.py` - Path B step 4: add `ampl_sig` (makes feature set complete)
 - `run_pipeline_on_features.py` - Full analysis pipeline with HDBSCAN/UMAP clustering
-- `bexvar_ero.py` - Bayesian excess variance calculation
+- `bexvar_ero.py` - Bayesian excess variance via ultranest nested sampling
 
-**Key features extracted**:
-- Weighted mean, variance, median, IQR
-- Lag-1 autocorrelation
-- Hurst exponent
-- Rise/fall ratios
-- Stetson K statistic
-- Bayesian excess variance (bexvar)
+**Two execution paths**:
+- **Path B (current)**: split → batch extract → consolidate → append `ampl_sig` → analyze. Produces **11 features**. Required because `ampl_sig` is in `SELECTED_FEATURES_FOR_CLUSTERING`.
+- **Path A (not used)**: single-node extraction. Only produces **10 features** — missing `ampl_sig`, so output is incomplete for clustering.
 
-Features are saved as pickled DataFrames in the pipeline's `data/` directory.
+**All 11 features extracted**:
+- `weighted_mean`, `weighted_variance` — error-weighted statistics
+- `lag1_autocorr` — lag-1 autocorrelation
+- `hurst_exp` — Hurst exponent (persistence vs. mean-reversion)
+- `mean_rise_fall_ratio` — rises/falls ratio
+- `beyond1std`, `stetson_k`, `mean_var` — from `light_curve` package
+- `excess_var` — normalized excess variance (NEV)
+- `bexvar` — Bayesian excess variance (nested sampling, slow)
+- `ampl_sig` — amplitude significance (**Path B only**, added by `append_new_features.py`)
+
+**9 features used for HDBSCAN clustering** (`SELECTED_FEATURES_FOR_CLUSTERING` in `config.py`):
+`weighted_mean`, `weighted_variance`, `lag1_autocorr`, `hurst_exp`, `mean_rise_fall_ratio`, `stetson_k`, `bexvar`, `mean_var`, `ampl_sig`
+
+Features are saved as pickled DataFrames in `data/all/amp_max_features/features.pkl` (= `FEATURES_FILE`).
 
 ### Deep Learning Models
 
@@ -138,16 +156,22 @@ cluster_labels, feature_matrix, pca_result = run_hdbscan_clustering(
 # Both use DataLoader with custom Dataset classes for handling variable-length sequences
 ```
 
-### Using New Feature Pipeline
+### Using New Feature Pipeline (Path B — current workflow)
 ```bash
-# Extract features (parallel processing with SLURM array jobs)
-python "z New Feature Extraction Pipeline/run_feature_extraction.py" --job-id 0 --num-jobs 10
+# Step 1: Split all light curves into 28 partitions
+sbatch "z New Feature Extraction Pipeline/split_curves.slurm"
 
-# Consolidate results
-python "z New Feature Extraction Pipeline/consolidate_features.py"
+# Step 2: Extract features for each partition (array job 0–28)
+sbatch "z New Feature Extraction Pipeline/run_chunks.slurm"
 
-# Run full analysis pipeline
-python "z New Feature Extraction Pipeline/run_pipeline_on_features.py"
+# Step 3: Merge per-curve pickles into one DataFrame
+sbatch "z New Feature Extraction Pipeline/consol_feat.slurm"
+
+# Step 4: Append ampl_sig feature (required for clustering)
+sbatch "z New Feature Extraction Pipeline/append_feat.slurm"
+
+# Step 5: Run clustering, outlier detection, and all visualizations
+sbatch "z New Feature Extraction Pipeline/analyze_features.slurm"
 ```
 
 ## Directory Structure
@@ -163,7 +187,7 @@ python "z New Feature Extraction Pipeline/run_pipeline_on_features.py"
 ├── test_trans.py                      # Transformer training/evaluation
 ├── test_rnn.py                        # RNN evaluation
 ├── plotmodel.py / plotmodelerror.py   # Visualization utilities
-├── *.slurm                            # SLURM job scripts
+├── *.slurm                            # Deep learning SLURM scripts (rnn, trans, plot_rnn)
 ├── Markdown Files/                    # Documentation
 │   ├── README.md                      # Project overview
 │   └── Data.md                        # Data structure documentation
@@ -174,15 +198,18 @@ python "z New Feature Extraction Pipeline/run_pipeline_on_features.py"
 │   ├── RNN plots/
 │   ├── Transformer plots/
 │   └── feature_extraction_plots/
-└── z New Feature Extraction Pipeline/ # New modular pipeline
-    ├── config.py                      # Configuration
-    ├── helper.py                      # Pipeline-specific utilities
-    ├── run_feature_extraction.py      # Main extraction script
-    ├── batch_feature_extraction.py    # Batch processing
-    ├── consolidate_features.py        # Merge results
-    ├── run_pipeline_on_features.py    # Full analysis
-    ├── bexvar_ero.py                  # Bayesian variance
-    └── data/all/                      # Extracted features (pickled)
+└── z New Feature Extraction Pipeline/ # New modular pipeline (current)
+    ├── config.py                      # Configuration (paths, SELECTED_FEATURES_FOR_CLUSTERING)
+    ├── helper.py                      # Pipeline-specific FITS loader
+    ├── run_feature_extraction.py      # Path A: single-node (10 features, not current)
+    ├── batch_feature_extraction.py    # Path B step 2: per-partition extraction
+    ├── split_curves.py                # Path B step 1: partition all curves
+    ├── consolidate_features.py        # Path B step 3: merge pickles
+    ├── append_new_features.py         # Path B step 4: add ampl_sig
+    ├── run_pipeline_on_features.py    # Final analysis (clustering, plots)
+    ├── bexvar_ero.py                  # Bayesian excess variance (ultranest)
+    ├── *.slurm                        # All feature extraction SLURM scripts
+    └── data/all/amp_max_features/     # Final features.pkl (FEATURES_FILE)
 ```
 
 ## Important Notes
