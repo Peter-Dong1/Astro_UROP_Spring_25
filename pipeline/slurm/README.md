@@ -17,7 +17,7 @@ Submit with: `sbatch slurm/<script>.slurm` from the pipeline root.
    Generate it once with `python helper.py` run interactively on the cluster.
    Without it, bad/empty FITS files won't be filtered (extraction won't crash, but will be noisy).
 
-> **Important**: Always `sbatch` from inside `z New Feature Extraction Pipeline/`.
+> **Important**: Always `sbatch` from inside `pipeline/`.
 > `PIPELINE_DIR` is set to `$SLURM_SUBMIT_DIR` (the directory you ran `sbatch` from),
 > and `inaccessible_lightcurves.txt` is also looked up from that same directory.
 

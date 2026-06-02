@@ -1,4 +1,4 @@
-# z New Feature Extraction Pipeline — Complete Reference
+# pipeline — Complete Reference
 
 This README documents every file in this directory: what it does, what it depends on, what it outputs, and what must run before it.
 
@@ -69,7 +69,7 @@ Steps 1 and 3 are cheap single jobs; Step 2 is the heavy array job (29 independe
 ## Directory Structure
 
 ```
-z New Feature Extraction Pipeline/
+pipeline/
 │
 ├── config.py                      # Central configuration (paths, parameters)
 ├── helper.py                      # FITS loading utilities
@@ -607,7 +607,7 @@ the split was successful.
 ## SLURM Scripts
 
 All scripts run on the `mit_normal` partition and activate the `myenv` conda environment.
-All paths in SLURM scripts are hardcoded to `/home/pdong/Astro UROP/z New Feature Extraction Pipeline/`.
+All paths in SLURM scripts are hardcoded to `/home/pdong/Astro UROP/pipeline/`.
 
 ---
 

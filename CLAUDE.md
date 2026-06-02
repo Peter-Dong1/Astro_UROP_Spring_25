@@ -37,7 +37,7 @@ sbatch <script>.slurm
 - `trans.slurm` - Train Transformer VAE model
 - `plot_rnn.slurm` - Generate RNN model visualizations
 
-**Feature extraction SLURM scripts** (all in `z New Feature Extraction Pipeline/`):
+**Feature extraction SLURM scripts** (all in `pipeline/`):
 - `get_features.slurm` - Path A single-node extraction (not currently used — missing `ampl_sig`)
 - `split_curves.slurm` - Path B step 1: partition all light curves
 - `run_chunks.slurm` - Path B step 2: array job (0–28), extract features per partition
@@ -72,7 +72,7 @@ Returns pandas DataFrames with columns: `TIME`, `TIMEDEL`, `RATE`, `ERRM`, `ERRP
 - Clustering: HDBSCAN with UMAP dimensionality reduction
 - Uses `light_curve` package for advanced features
 
-**New Pipeline** (`z New Feature Extraction Pipeline/`) — **currently in use**:
+**New Pipeline** (`pipeline/`) — **currently in use**:
 - `config.py` - Configuration with paths, parameters, and `SELECTED_FEATURES_FOR_CLUSTERING`
 - `helper.py` - Pipeline-specific FITS loader (adds FRACEXP, COUNTS, BACKCOUNTS, BACKRATIO)
 - `run_feature_extraction.py` - Path A single-node extraction (**10 features, not current**)
@@ -159,19 +159,19 @@ cluster_labels, feature_matrix, pca_result = run_hdbscan_clustering(
 ### Using New Feature Pipeline (Path B — current workflow)
 ```bash
 # Step 1: Split all light curves into 28 partitions
-sbatch "z New Feature Extraction Pipeline/split_curves.slurm"
+sbatch "pipeline/split_curves.slurm"
 
 # Step 2: Extract features for each partition (array job 0–28)
-sbatch "z New Feature Extraction Pipeline/run_chunks.slurm"
+sbatch "pipeline/run_chunks.slurm"
 
 # Step 3: Merge per-curve pickles into one DataFrame
-sbatch "z New Feature Extraction Pipeline/consol_feat.slurm"
+sbatch "pipeline/consol_feat.slurm"
 
 # Step 4: Append ampl_sig feature (required for clustering)
-sbatch "z New Feature Extraction Pipeline/append_feat.slurm"
+sbatch "pipeline/append_feat.slurm"
 
 # Step 5: Run clustering, outlier detection, and all visualizations
-sbatch "z New Feature Extraction Pipeline/analyze_features.slurm"
+sbatch "pipeline/analyze_features.slurm"
 ```
 
 ## Directory Structure
@@ -198,7 +198,7 @@ sbatch "z New Feature Extraction Pipeline/analyze_features.slurm"
 │   ├── RNN plots/
 │   ├── Transformer plots/
 │   └── feature_extraction_plots/
-└── z New Feature Extraction Pipeline/ # New modular pipeline (current)
+└── pipeline/ # New modular pipeline (current)
     ├── config.py                      # Configuration (paths, SELECTED_FEATURES_FOR_CLUSTERING)
     ├── helper.py                      # Pipeline-specific FITS loader
     ├── run_feature_extraction.py      # Path A: single-node (10 features, not current)
@@ -214,7 +214,7 @@ sbatch "z New Feature Extraction Pipeline/analyze_features.slurm"
 
 ## Important Notes
 
-- **Two helper.py files**: One in root, one in `z New Feature Extraction Pipeline/`. The pipeline version has additional utilities for batch processing.
+- **Two helper.py files**: One in root, one in `pipeline/`. The pipeline version has additional utilities for batch processing.
 - **Hardcoded paths**: Some scripts reference `/home/pdong/Astro\ UROP/` - adjust when running in different environments.
 - **GPU required**: Deep learning models require CUDA-enabled GPU.
 - **Conda environment**: Activate `myenv` before running scripts.

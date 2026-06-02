@@ -1,15 +1,15 @@
 /ppae
 /wandb
 /logs
-/z\ New Feature\ Extraction\ Pipeline/data/*
-# !/z\ New Feature\ Extraction\ Pipeline/data/all/243/*
-# !/z\ New Feature\ Extraction\ Pipeline/data/all/processed/*
-/z\ New Feature\ Extraction\ Pipeline/logs/*
-/z\ New Feature\ Extraction\ Pipeline/100features/*
-/z\ New Feature\ Extraction\ Pipeline/cluster_plots/*
-/z\ New Feature\ Extraction\ Pipeline/plots/*
-/z\ New Feature\ Extraction\ Pipeline/webapp/*
-/z\ New Feature\ Extraction\ Pipeline/libs/*
+/pipeline/data/*
+# !/pipeline/data/all/243/*
+# !/pipeline/data/all/processed/*
+/pipeline/logs/*
+/pipeline/100features/*
+/pipeline/cluster_plots/*
+/pipeline/plots/*
+/pipeline/webapp/*
+/pipeline/libs/*
 /Archived/*
 /MarkdownFiles/*
 /models/*

@@ -79,7 +79,7 @@ Astro_UROP_Spring_25/
 │       ├── DATA_DICTIONARY.md            # Feature & column definitions
 │       └── METHODS.md                    # Methodology details
 │
-├── z New Feature Extraction Pipeline/    # Original working directory
+├── pipeline/    # Original working directory
 │   └── (pipeline code - copied to ORGANIZED_RESULTS)
 │
 ├── ARCHIVED_CODE/                        # Exploratory/unused code
@@ -177,24 +177,24 @@ These files need to be downloaded from the MIT Engaging cluster:
 
 ### Priority 1: Cosine Similarity Lists ⭐⭐⭐
 ```
-/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/analysis_results/
+/home/pdong/Astro UROP/pipeline/data/all/analysis_results/
 ```
 
 ### Priority 2: Main Clustering (Run 237)
 ```
-/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/237/
+/home/pdong/Astro UROP/pipeline/data/all/237/
 ```
 
 ### Priority 3: Features File
 ```
-/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/amp_max_features/features.pkl
+/home/pdong/Astro UROP/pipeline/data/all/amp_max_features/features.pkl
 ```
 
 ### Priority 4: Additional Runs & Visualizations
 ```
-/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/217/
-/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/all/266/
-/home/pdong/Astro UROP/z New Feature Extraction Pipeline/plots/all266/CLUSTERS/
+/home/pdong/Astro UROP/pipeline/data/all/217/
+/home/pdong/Astro UROP/pipeline/data/all/266/
+/home/pdong/Astro UROP/pipeline/plots/all266/CLUSTERS/
 ```
 
 **Download instructions**: See [`FINAL_REORGANIZATION_PLAN.md`](FINAL_REORGANIZATION_PLAN.md) STEP 1
