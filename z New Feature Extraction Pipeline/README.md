@@ -85,28 +85,26 @@ z New Feature Extraction Pipeline/
 ├── consolidate_features.py        # Path B step 3: merge per-curve pickles
 │
 ├── run_pipeline_on_features.py    # Main analysis: outliers, HDBSCAN, UMAP, plots
-├── analyze_similar_curves.py      # Secondary: similarity + histograms for known curves
-├── plot_cluster_samples.py        # CLI: plot sample curves from one cluster
-├── sample_clusters.py             # Grid plots of 25 samples per cluster
-├── bexvar_histograms.py           # CLI: per-feature histograms from a features .pkl
 │
-├── inspect_features.py            # Debug: print column types/contents of features.pkl
-├── check_nans.py                  # Debug: report NaN counts in features.pkl
-├── test_split_curves.py           # Debug: count total curves across partition files
+├── slurm/                         # SLURM job scripts (see slurm/README.md)
+│   ├── path_a.slurm               # Path A (1 node, 64 CPUs, 128 GB, 12h)
+│   ├── path_b_1_split.slurm       # Path B step 1 (4 CPUs, 4 GB, 1h)
+│   ├── path_b_2_extract.slurm     # Path B step 2 (array 0-28, 85 CPUs, 128 GB, 48h)
+│   ├── path_b_3_consolidate.slurm # Path B step 3 (4 CPUs, 128 GB, 12h)
+│   └── analyze.slurm              # Final analysis (4 CPUs, 180 GB, 12h)
 │
-├── slurm/
-│   ├── path_a.slurm               # SLURM: Path A (1 node, 64 CPUs, 128 GB, 12h)
-│   ├── path_b_1_split.slurm       # SLURM: Path B step 1 (4 CPUs, 4 GB, 1h)
-│   ├── path_b_2_extract.slurm     # SLURM: Path B step 2 (array 0-28, 85 CPUs, 128 GB, 48h)
-│   ├── path_b_3_consolidate.slurm # SLURM: Path B step 3 (4 CPUs, 128 GB, 12h)
-│   └── analyze.slurm              # SLURM: final analysis (4 CPUs, 180 GB, 12h)
+├── scripts/                       # Utility/one-off scripts (see scripts/README.md)
+│   ├── analyze_similar_curves.py  # Similarity search + cluster histograms for known curves
+│   ├── sample_clusters.py         # Grid plots of 25 samples per cluster from a saved run
+│   ├── check_nans.py              # Report NaN counts in features.pkl
+│   ├── inspect_features.py        # Print column types/contents of features.pkl
+│   └── plot_feature_histograms.py # Per-feature histograms from any features .pkl
 │
 ├── data/                          # Generated data (not tracked in git)
 │   ├── all/
-│   │   ├── processed/             # Intermediate chunk pickles
-│   │   ├── bexvar_features/       # Post-consolidation features (before ampl_sig)
+│   │   ├── processed/             # Intermediate chunk pickles (Path A)
 │   │   └── amp_max_features/      # Final features (FEATURES_FILE lives here)
-│   └── split_light_curves/        # Partition files for batch processing
+│   └── split_light_curves/        # Partition files for Path B batch processing
 │
 ├── plots/                         # Generated plots (not tracked in git)
 │   └── all<number>/
@@ -114,9 +112,7 @@ z New Feature Extraction Pipeline/
 │       ├── hdbscan/
 │       └── umap/
 │
-├── extracted_features/            # Per-curve .pkl files from batch job
-├── libs/                          # Optional local library overrides
-└── 640features/                   # Archived feature set (legacy)
+└── extracted_features/            # Per-curve .pkl files from Path B batch job
 ```
 
 ---
@@ -168,7 +164,7 @@ script. Automatically creates output directories on import.
 the root-level `helper.py` — it adds `FRACEXP`, `COUNTS`, `BACKCOUNTS`, and `BACKRATIO` columns
 that the root version does not load.
 
-**Depends on**: `astropy`, `pandas`, `numpy`, `sklearn`, `torch`, `inaccessible_lightcurves.txt`
+**Depends on**: `astropy`, `pandas`, `numpy`, `sklearn` (model_selection only), `inaccessible_lightcurves.txt`
 (in the working directory).
 
 **Key functions**:

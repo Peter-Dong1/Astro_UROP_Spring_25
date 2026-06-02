@@ -9,21 +9,11 @@ This module provides utilities for:
 
 import os
 import glob
+import random
 import pandas as pd
 import numpy as np
 from astropy.io import fits
-import matplotlib.pyplot as plt
-import random
-import math
-
-import torch
-from torch.nn import functional as F
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
-from torch.utils.data import DataLoader, Dataset
-from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import IsolationForest
-from sklearn.decomposition import PCA
 
 # Default path to the directory containing the FITS files
 DEFAULT_DATA_DIR = '/pool001/rarcodia/eROSITA_public/data/eRASS1_lc_rebinned'

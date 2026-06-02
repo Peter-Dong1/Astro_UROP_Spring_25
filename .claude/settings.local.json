@@ -3,7 +3,11 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(find:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(mkdir scripts *)",
+      "Bash(mv analyze_similar_curves.py sample_clusters.py check_nans.py inspect_features.py scripts/)",
+      "Bash(mv bexvar_histograms.py scripts/plot_feature_histograms.py)",
+      "Bash(python -c ' *)"
     ]
   }
 }
