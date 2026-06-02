@@ -77,6 +77,9 @@ Energy bands: Low 0.2–0.6 keV · Medium 0.6–2.3 keV · High 2.3–5.0 keV
 
 Final features file (on cluster): `pipeline/data/all/amp_max_features/features.pkl`
 
+**Download pre-extracted features**: [Google Drive](https://drive.google.com/drive/folders/1hX4WDB7Na-vmTspZYDl6MM1htMKk5y41?usp=sharing)
+Place the downloaded `features.pkl` at `pipeline/data/all/amp_max_features/features.pkl` to skip straight to the analysis step (`sbatch pipeline/slurm/analyze.slurm`).
+
 ---
 
 ## ORGANIZED_RESULTS/
