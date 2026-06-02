@@ -14,7 +14,7 @@
 # Run after: inaccessible_lightcurves.txt has been generated (python helper.py)
 # Run before: slurm/analyze.slurm
 
-PIPELINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PIPELINE_DIR="$SLURM_SUBMIT_DIR"
 
 source /home/software/anaconda3/2023.07/etc/profile.d/conda.sh
 conda activate myenv

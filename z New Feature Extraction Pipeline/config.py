@@ -21,7 +21,7 @@ for dir_path in [DATA_DIR, PROCESSED_DATA_DIR, PLOT_DIR, FILE_PLOT_DIR,
                  FEATURE_OUTPUT_DIR, HDBSCAN_OUTPUT_DIR, UMAP_OUTPUT_DIR]:
     os.makedirs(dir_path, exist_ok=True)
 
-# Known interesting light curves
+# Known interesting light curves - provided by Riccardo
 KNOWN_LIGHT_CURVES = [
     "em01_211120_020_LightCurve_00007_c010_rebinned.fits",
     "em01_039135_020_LightCurve_00058_c010_rebinned.fits",
@@ -36,25 +36,12 @@ DEFAULT_CONTAMINATION = 0.05
 DEFAULT_N_NEIGHBORS = 15
 DEFAULT_MIN_DIST = 0.1
 DEFAULT_N_COMPONENTS = 2
-# DEFAULT_MIN_CLUSTER_SIZE = 0 # Smaller
-# DEFAULT_EPSILON = 1
-#TODO
-# Epsilon - Larger
-# Change distances for HDBSCAN to cosine simlarty
+
+# Can choose the features that we want to extract
 SELECTED_FEATURES_FOR_CLUSTERING = [
 "weighted_mean", "weighted_variance", "lag1_autocorr", "hurst_exp",
 "mean_rise_fall_ratio", "stetson_k", "bexvar", "mean_var", "ampl_sig"
 ]
-
-# SELECTED_FEATURES_FOR_CLUSTERING = [
-# "weighted_mean", "weighted_variance", "lag1_autocorr", "hurst_exp",
-# "mean_rise_fall_ratio", "stetson_k", "bexvar", "mean_var", "ampl_sig"
-# ]
-
-# SELECTED_FEATURES_FOR_CLUSTERING = [
-# "weighted_mean", "lag1_autocorr", "hurst_exp",
-# "mean_rise_fall_ratio", "bexvar", "ampl_sig"
-# ]
 
 # Extracted features directory (used by PATH B batch jobs and consolidate script)
 EXTRACTED_FEATURES_DIR = os.path.join(BASE_DIR, "extracted_features")

@@ -15,7 +15,7 @@
 # UMAP, and generates all plots/CSVs.
 # Run after:  slurm/path_a.slurm  OR  slurm/path_b_3_consolidate.slurm
 
-PIPELINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PIPELINE_DIR="$SLURM_SUBMIT_DIR"
 
 source /home/software/anaconda3/2023.07/etc/profile.d/conda.sh
 conda activate myenv
