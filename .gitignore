@@ -1,28 +1,22 @@
-/ppae
-/wandb
-/logs
+# Pipeline — generated data and outputs (large, cluster-produced)
 /pipeline/data/*
-# !/pipeline/data/all/243/*
-# !/pipeline/data/all/processed/*
+/pipeline/extracted_features/*
 /pipeline/logs/*
-/pipeline/100features/*
-/pipeline/cluster_plots/*
 /pipeline/plots/*
-/pipeline/webapp/*
-/pipeline/libs/*
-/Archived/*
-/MarkdownFiles/*
-/models/*
-/Notebooks/*
-/plots/*
-/temp\ RNN\ disposal/*
-/training_plots/*
 
-
-training_plots/**/*.txt
-plots/**/*.txt
-
+# SLURM job output files
 *.out
 *.err
 
+# Python
+**/__pycache__/
+**/*.pyc
+
+# Pipeline runtime file (generated on cluster before extraction)
 inaccessible_lightcurves.txt
+
+# Jupyter notebook checkpoints
+**/.ipynb_checkpoints/
+
+# Weights & Biases experiment tracking
+/wandb/

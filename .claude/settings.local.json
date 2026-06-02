@@ -7,7 +7,11 @@
       "Bash(mkdir scripts *)",
       "Bash(mv analyze_similar_curves.py sample_clusters.py check_nans.py inspect_features.py scripts/)",
       "Bash(mv bexvar_histograms.py scripts/plot_feature_histograms.py)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(sed -i '' 's|z New Feature Extraction Pipeline|pipeline|g' /Users/peterd/RealAstroStuff/Astro_UROP_Spring_25/ORGANIZED_RESULTS/6_documentation/RUN_HISTORY.md)",
+      "Bash(sed -i '' 's|ORGANIZED_RESULTS/5_code/|pipeline/|g' /Users/peterd/RealAstroStuff/Astro_UROP_Spring_25/ORGANIZED_RESULTS/6_documentation/RUN_HISTORY.md)",
+      "Bash(rm -f HANDOFF_CHECKLIST.md HANDOFF_RETRIEVAL_PLAN.md ORGANIZATION_PLAN.md FINAL_REORGANIZATION_PLAN.md REORGANIZATION_PROGRESS.md PROJECT_STATUS.md folder_size.txt 'Astrophysics Meeting Notes Total 1d9475833b3280b3a66cdb97967f4087.md' helper.py feature_extraction.py light_curves.py)",
+      "Bash(rm -rf \"Markdown Files/\" __pycache__/)"
     ]
   }
 }

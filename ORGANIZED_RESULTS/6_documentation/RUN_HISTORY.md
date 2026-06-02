@@ -44,7 +44,7 @@
 
 ### Phase 2: Statistical Feature Extraction (March - May)
 
-**Location**: `z New Feature Extraction Pipeline/`
+**Location**: `pipeline/`
 **Status**: Main work - results in final deliverables
 
 ---
@@ -192,8 +192,8 @@
 **Command**:
 ```bash
 python bexvar_histograms.py \
-  "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/data/640/processedbatch/feature.pkl" \
-  --outdir "/home/pdong/Astro UROP/z New Feature Extraction Pipeline/640features"
+  "/home/pdong/Astro UROP/pipeline/data/640/processedbatch/feature.pkl" \
+  --outdir "/home/pdong/Astro UROP/pipeline/640features"
 ```
 
 **Output**: 10 histogram PNG files in `640features/`
@@ -378,7 +378,7 @@ plots/all266/CLUSTERS/
 ## Reproducibility
 
 All analysis can be reproduced using:
-- Code in `ORGANIZED_RESULTS/5_code/`
+- Code in `pipeline/`
 - Parameters documented in this file
 - Data at `/pool001/rarcodia/eROSITA_public/data/eRASS1_lc_rebinned` (cluster)
 
