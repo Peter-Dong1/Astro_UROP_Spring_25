@@ -35,6 +35,8 @@ Astro_UROP_Spring_25/
 
 The active codebase. See `pipeline/README.md` for the full reference.
 
+The pipeline is designed to run on the **MIT Engaging cluster**. All SLURM scripts target Engaging partitions (`mit_normal`, `mit_preemptable`) and the `myenv` conda environment.
+
 **Two ways to run feature extraction**, both produce the same 11 features:
 
 | Path | When to use | Steps |
@@ -115,10 +117,29 @@ See `ARCHIVED_CODE/README.md` for full context on what was tried and why it was 
 
 ---
 
-## Conda environment
+## Environment setup
 
-All pipeline code runs in the `myenv` environment on the MIT Engaging cluster.
+`environment.yml` is a direct export of the `myenv` conda environment from the MIT Engaging
+cluster. To recreate it:
 
+**1. Remove the last line** of `environment.yml` before running (it's a personal path):
+```
+prefix: /home/pdong/.conda/envs/myenv   ← delete this line
+```
+
+**2. Create the environment:**
 ```bash
+conda env create -f environment.yml
 conda activate myenv
 ```
+
+The SLURM scripts already reference `myenv` so no further changes are needed.
+
+**Important caveats:**
+- This environment is **Linux + CUDA 12.4 specific**. The `nvidia-*`, `cuda-*`, and
+  `pytorch-cuda` packages will not install on macOS or Windows. On a non-GPU Linux machine,
+  remove those packages and the `nvidia` / `pytorch` channels before creating.
+- Key pipeline packages: `umap-learn 0.5.7`, `ultranest 4.4.0`, `light-curve 0.10.2`,
+  `astropy 6.1.3`, `scikit-learn 1.5.2`, `scipy 1.15.1`, Python 3.11
+- PyTorch 2.5.1 is included but only needed for `ARCHIVED_CODE/` — not required for the
+  feature extraction pipeline.
